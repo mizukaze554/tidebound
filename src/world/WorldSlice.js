@@ -24,18 +24,22 @@ export class WorldSlice {
   }
 
   attachChunk(key, group, latIndex, lonIndex, lat0, lon0) {
-    const nearSpawn = Math.abs(lat0 - this.world.spawnLat) < this.world.chunkAngle * 3 && Math.abs(lon0 - this.world.spawnLon) < this.world.chunkAngle * 3;
+    const nearSpawn = Math.abs(lat0 - this.world.spawnLat) < this.world.chunkAngle * 1.5 && Math.abs(lon0 - this.world.spawnLon) < this.world.chunkAngle * 1.5;
     if (!nearSpawn && this.world.hash(latIndex, lonIndex + 400) < 0.7) return;
     const worldBiome = this.world.biomeAt(lat0 + this.world.chunkAngle * 0.5, lon0 + this.world.chunkAngle * 0.5);
     const catalogBiome = { highland: 'mountain', steppe: 'desert', tundra: 'alpine' }[worldBiome] || worldBiome;
     const candidates = this.naturalByBiome.get(catalogBiome) || [];
     const variation = candidates[Math.floor(this.world.hash(latIndex + 19, lonIndex + 41) * candidates.length)];
     const priority = catalogBiome === 'mountain' ? 'wa_07_006' : catalogBiome === 'coast' ? 'wa_11_001' : null;
-    const selected = nearSpawn ? [...NATURAL_IDS, ...(variation ? [variation.id] : [])] : [...(priority ? [priority] : []), ...(variation ? [variation.id] : [])];
+    const scenic = ['tree', 'shrub', 'mushrooms', 'rocks', 'rock_cluster', 'flower_stems'];
+    const selected = nearSpawn ? [...NATURAL_IDS, ...(variation && scenic.includes(variation.geometryPreset) ? [variation.id] : [])]
+      : [...(priority ? [priority] : []), ...(variation ? [variation.id] : [])];
     selected.forEach((assetId, index) => {
       const asset = worldCatalog.assetById.get(assetId);
       const lat = lat0 + this.world.chunkAngle * (0.2 + this.world.hash(latIndex + index, lonIndex + 301) * 0.6);
       const lon = lon0 + this.world.chunkAngle * (0.2 + this.world.hash(lonIndex + index, latIndex + 203) * 0.6);
+      const local = this.world.valleyCoordinates(lat, lon);
+      if (Math.hypot(local.x - 7, local.z) < 20) return;
       const biome = this.world.biomeAt(lat, lon);
       const placementBiome = { highland: 'mountain', steppe: 'desert', tundra: 'alpine' }[biome] || biome;
       if (!asset.placement.biomes.includes(placementBiome)) return;
@@ -43,7 +47,7 @@ export class WorldSlice {
       object.traverse((child) => { if (child.isMesh) child.userData.sharedResource = true; });
       object.position.copy(this.world.surfacePoint(lat, lon, 0.08));
       alignToTerrain(object, object.position);
-      group.add(object);
+      (group.userData.detailGroups?.resourceGroup || group).add(object);
       const id = `${key}:${assetId}:${index}`;
       const node = { id, asset, object, key };
       this.nodes.set(id, node);
@@ -144,7 +148,9 @@ export class WorldSlice {
     const { lat, lon } = this.world.coordinates(candidate);
     const epsilon = 1 / this.world.radius;
     const slope = Math.atan2(Math.max(Math.abs(this.world.heightAt(lat + epsilon, lon) - this.world.heightAt(lat - epsilon, lon)), Math.abs(this.world.heightAt(lat, lon + epsilon) - this.world.heightAt(lat, lon - epsilon))), 2) * 180 / Math.PI;
-    const noCollision = [...this.structures.values()].every((object) => object.position.distanceTo(candidate) > 4) && [...this.nodes.values()].every((node) => !node.object.visible || node.object.position.distanceTo(candidate) > 2.5);
+    const noCollision = [...this.structures.values()].every((object) => object.position.distanceTo(candidate) > 4)
+      && [...this.nodes.values()].every((node) => !node.object.visible || node.object.position.distanceTo(candidate) > 2.5)
+      && !this.world.valley?.blocksMovement(candidate, 2);
     this.preview.valid = slope <= this.preview.recipe.placementRules.terrainSlopeMaxDegrees && noCollision;
     this.preview.placement = { lat, lon, rotation: this.preview.rotation };
     this.preview.object.position.copy(candidate);

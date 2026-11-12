@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { fbm3, smoothstep, valueNoise3 } from './TerrainNoise.js';
+import { rockGeometry, rockMaterial, treeGeometry, treeMaterial } from './EnvironmentModels.js';
+import { createVegetationMaterials, getFlowerGeometry, getGrassGeometry } from './Vegetation.js';
+import { AzureValley } from './AzureValley.js';
 
 // A globe-scale world is rendered in engine units for stable browser physics.
 export class PlanetWorld {
@@ -11,7 +15,7 @@ export class PlanetWorld {
     this.chunkAngle = Math.PI * 2 / 288;
     this.chunkRadius = 4;
     this.terrainSegments = 10;
-    this.grassCount = 34;
+    this.grassCount = 70;
     this.particleMultiplier = 0.75;
     this.quality = 'balanced';
     this.chunks = new Map();
@@ -20,13 +24,15 @@ export class PlanetWorld {
     this.spawnLat = 0.35;
     this.spawnLon = 0.6;
     this.weather = 'CLEAR';
+    this.valleyName = 'THE AZURE VALLEY';
     this.weatherParticles = null;
     this.weatherPositions = null;
     this.creaturesVisible = false;
     this.rotationAxis = new THREE.Vector3(0, 1, 0);
+    this.vegetation = createVegetationMaterials();
     this.buildAtmosphere();
     this.buildClouds();
-    this.buildDuelSanctuary();
+    this.valley = new AzureValley(this, this.scene);
     this.stream(this.surfacePoint(this.spawnLat, this.spawnLon));
   }
 
@@ -37,19 +43,25 @@ export class PlanetWorld {
     );
     this.planetCore.receiveShadow = true;
     this.scene.add(this.planetCore);
+    this.skyMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false,
+      uniforms: { uUp: { value: this.surfacePoint(this.spawnLat, this.spawnLon).normalize() }, uSun: { value: new THREE.Vector3(0.3, 0.9, 0.2).normalize() } },
+      vertexShader: 'varying vec3 vPos; void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader: `uniform vec3 uUp; uniform vec3 uSun; varying vec3 vPos;
+        void main(){vec3 direction=normalize(vPos); float elevation=dot(direction,uUp);
+          float horizon=smoothstep(-.14,.5,elevation); vec3 low=vec3(.78,.89,.89); vec3 high=vec3(.15,.43,.71);
+          vec3 color=mix(low,high,horizon); float warmth=pow(max(dot(direction,uSun),0.),28.);
+          color+=vec3(.34,.20,.09)*warmth*(1.-horizon*.4); gl_FragColor=vec4(color,1.);}`,
+    });
     const sky = new THREE.Mesh(
       new THREE.SphereGeometry(this.radius * 2.8, 32, 20),
-      new THREE.ShaderMaterial({
-        side: THREE.BackSide, depthWrite: false,
-        vertexShader: 'varying vec3 vPos; void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-        fragmentShader: 'varying vec3 vPos; void main(){float h=smoothstep(-.45,.82,normalize(vPos).y);vec3 a=vec3(.72,.89,.94);vec3 b=vec3(.12,.42,.67);float glow=pow(max(normalize(vPos).y,0.),5.);gl_FragColor=vec4(mix(a,b,h)+vec3(.18,.13,.06)*glow,1.0);}',
-      }),
+      this.skyMaterial,
     );
     this.scene.add(sky);
-    this.scene.fog = new THREE.FogExp2(0xb8dce1, 0.0025);
-    this.hemi = new THREE.HemisphereLight(0xd9f4ff, 0x46634c, 2.2);
+    this.scene.fog = new THREE.FogExp2(0xb3d5d6, 0.0032);
+    this.hemi = new THREE.HemisphereLight(0xe4f3ff, 0x415f70, 1.25);
     this.scene.add(this.hemi);
-    this.sun = new THREE.DirectionalLight(0xfff1cb, 3.4);
+    this.sun = new THREE.DirectionalLight(0xffe9bd, 2.4);
     this.sun.position.set(-250, 400, 180);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
@@ -57,7 +69,9 @@ export class PlanetWorld {
     this.sun.shadow.camera.right = this.sun.shadow.camera.top = 70;
     this.sun.shadow.camera.far = 900;
     this.sun.shadow.bias = -0.0004;
+    this.sun.shadow.normalBias = 0.035;
     this.scene.add(this.sun);
+    this.scene.add(this.sun.target);
   }
 
   buildClouds() {
@@ -105,7 +119,7 @@ export class PlanetWorld {
       const angle = i / 8 * Math.PI * 2;
       const tangentPoint = center.clone().addScaledVector(east, Math.cos(angle) * 10.5).addScaledVector(north, Math.sin(angle) * 10.5);
       const normal = tangentPoint.clone().normalize();
-      const position = normal.multiplyScalar(this.surfaceRadius(tangentPoint) + 0.05);
+      const position = normal.clone().multiplyScalar(this.surfaceRadius(tangentPoint) + 0.05);
       const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
       matrix.compose(position, quaternion, new THREE.Vector3(1, 1, 1)); pillars.setMatrixAt(i, matrix);
       const crystalPosition = position.clone().addScaledVector(normal, 4.5);
@@ -119,7 +133,7 @@ export class PlanetWorld {
     const setDecoration = (mesh, index, angle, distance, height, scale) => {
       const tangentPoint = center.clone().addScaledVector(east, Math.cos(angle) * distance).addScaledVector(north, Math.sin(angle) * distance);
       const normal = tangentPoint.clone().normalize();
-      const position = normal.multiplyScalar(this.surfaceRadius(tangentPoint) + height);
+      const position = normal.clone().multiplyScalar(this.surfaceRadius(tangentPoint) + height);
       const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
       matrix.compose(position, quaternion, scale); mesh.setMatrixAt(index, matrix);
     };
@@ -135,15 +149,49 @@ export class PlanetWorld {
     return value - Math.floor(value);
   }
 
+  valleyCoordinates(lat, lon) {
+    return { x: (lon - this.spawnLon) * this.radius * Math.cos(this.spawnLat), z: (lat - this.spawnLat) * this.radius };
+  }
+
+  riverCenter(x) { return -14 + Math.sin(x / 24) * 5; }
+
+  slopeAt(lat, lon) {
+    const stepLat = 1 / this.radius;
+    const stepLon = 1 / (this.radius * Math.max(0.2, Math.cos(lat)));
+    const north = (this.heightAt(lat + stepLat, lon) - this.heightAt(lat - stepLat, lon)) * 0.5;
+    const east = (this.heightAt(lat, lon + stepLon) - this.heightAt(lat, lon - stepLon)) * 0.5;
+    return Math.hypot(north, east);
+  }
+
   heightAt(lat, lon) {
-    const continental = Math.sin(lon * 2 + Math.sin(lat * 3.4)) * 1.8;
-    const ridges = Math.abs(Math.sin(lon * 8 + lat * 5.7) * Math.cos(lat * 9.1 - lon * 3));
-    const detail = Math.sin(lon * 24 + lat * 19.3) * 0.42 + Math.sin(lon * 52 - lat * 37.4) * 0.18;
-    return 2.5 + continental * 0.8 + ridges * 4.2 + detail * 1.6;
+    const cos = Math.cos(lat);
+    const nx = cos * Math.cos(lon), ny = Math.sin(lat), nz = cos * Math.sin(lon);
+    const warp = (valueNoise3(nx * 8 + 3, ny * 8 - 7, nz * 8 + 11) - 0.5) * 0.7;
+    const hills = fbm3(nx * 7 + warp, ny * 7 - warp, nz * 7 + warp, 4);
+    const highland = smoothstep(0.5, 0.72, valueNoise3(nx * 3 + 14, ny * 3 + 5, nz * 3 - 9));
+    const globalHeight = 3.5 + hills * 5.2 + highland * (8 + 7 * Math.abs(fbm3(nx * 19, ny * 19, nz * 19, 3)));
+    const { x, z } = this.valleyCoordinates(lat, lon);
+    const distance = Math.hypot(x, z);
+    if (distance >= 230) return globalHeight;
+    const valleyHills = fbm3(x / 68 + 12.3, z / 68 - 3.7, 1.83, 4) * 4.2
+      + fbm3(x / 22 - 4.6, z / 22 + 9.1, 5.2, 3) * 0.8;
+    const ridge = Math.exp(-(((x + 145) / 49) ** 2)) * (12 + 7 * Math.abs(fbm3(z / 25, x / 29, 2.8, 3)));
+    const river = x > -135 && x < 60 ? Math.exp(-(((z - this.riverCenter(x)) / 4.8) ** 2)) * 1.7 : 0;
+    let localHeight = 3.6 + valleyHills + ridge - river;
+    localHeight = THREE.MathUtils.lerp(3.6, localHeight, smoothstep(10, 26, distance));
+    return THREE.MathUtils.lerp(localHeight, globalHeight, smoothstep(150, 230, distance));
   }
 
   biomeAt(lat, lon, height = this.heightAt(lat, lon)) {
-    const moisture = Math.sin(lon * 5 - lat * 7.9) * 0.5 + 0.5;
+    const { x, z } = this.valleyCoordinates(lat, lon);
+    if (Math.hypot(x, z) < 155) {
+      if (x < -112 && height > 10) return 'highland';
+      if (Math.abs(z - this.riverCenter(x)) < 5 && x > -135 && x < 60) return 'wetland';
+      if (z > 20 && x < -40) return 'forest';
+      return 'grassland';
+    }
+    const cos = Math.cos(lat);
+    const moisture = valueNoise3(cos * Math.cos(lon) * 10 + 8, Math.sin(lat) * 10, cos * Math.sin(lon) * 10 - 4);
     if (Math.abs(lat) > 1.05) return 'tundra';
     if (height > 6) return 'highland';
     if (height < 2.3 && Math.abs(lat) < 0.85) return 'coast';
@@ -153,9 +201,28 @@ export class PlanetWorld {
     return 'grassland';
   }
 
-  colorFor(biome, height) {
-    const colors = { tundra: 0x9baead, highland: 0x68706a, steppe: 0x8a8153, coast: 0xb9aa79, wetland: 0x3f7975, forest: 0x245746, grassland: 0x3f7359 };
-    return new THREE.Color(colors[biome]).offsetHSL(0, 0, THREE.MathUtils.clamp((height - 1.5) * 0.025, -0.04, 0.08));
+  colorFor(lat, lon, height, slope = 0) {
+    const biome = this.biomeAt(lat, lon, height);
+    const cos = Math.cos(lat);
+    const detail = valueNoise3(cos * Math.cos(lon) * 54 + 2, Math.sin(lat) * 54 - 7, cos * Math.sin(lon) * 54 + 4);
+    const grass = new THREE.Color(0x5b9257).lerp(new THREE.Color(0x8ab66b), detail * 0.38);
+    if (biome === 'forest') grass.lerp(new THREE.Color(0x315c47), 0.48);
+    if (biome === 'wetland') grass.lerp(new THREE.Color(0x3c746b), 0.42);
+    if (biome === 'steppe') grass.lerp(new THREE.Color(0xa7945d), 0.72);
+    if (biome === 'coast') grass.lerp(new THREE.Color(0xc3b583), 0.85);
+    const { x, z } = this.valleyCoordinates(lat, lon);
+    if (Math.hypot(x, z) < 170 && x > -135 && x < 60) {
+      const riverDistance = Math.abs(z - this.riverCenter(x));
+      grass.lerp(new THREE.Color(0x647a57), (1 - smoothstep(4, 11, riverDistance)) * 0.45);
+    }
+    if (x > -60 && x < 12) {
+      const trail = (7 - x) * 0.28 + Math.sin(x / 13) * 1.7;
+      grass.lerp(new THREE.Color(0xa3916c), (1 - smoothstep(1.2, 3.5, Math.abs(z - trail))) * 0.53);
+    }
+    const rock = Math.max(smoothstep(0.35, 0.7, slope), smoothstep(9, 16, height) * 0.9);
+    grass.lerp(new THREE.Color(0x737c78), rock);
+    if (height > 18) grass.lerp(new THREE.Color(0xd8ded4), smoothstep(18, 25, height) * 0.8);
+    return grass;
   }
 
   surfacePoint(lat, lon, extra = 0) {
@@ -241,7 +308,7 @@ export class PlanetWorld {
         const lon = lon0 + this.chunkAngle * x / segments;
         const height = this.heightAt(lat, lon);
         const p = this.surfacePoint(lat, lon);
-        const color = this.colorFor(this.biomeAt(lat, lon, height), height);
+        const color = this.colorFor(lat, lon, height, this.slopeAt(lat, lon));
         positions.push(p.x, p.y, p.z);
         colors.push(color.r, color.g, color.b);
       }
@@ -254,82 +321,107 @@ export class PlanetWorld {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geometry.setIndex(indices); geometry.computeVertexNormals();
-    const material = new THREE.MeshToonMaterial({ vertexColors: true });
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 });
     const terrain = new THREE.Mesh(geometry, material);
     terrain.receiveShadow = true;
     const group = new THREE.Group(); group.add(terrain);
-    this.generateGrass(group, latIndex, lonIndex, lat0, lon0);
-    this.generateLandmarks(group, latIndex, lonIndex, lat0, lon0);
-    this.generateCreature(group, latIndex, lonIndex, lat0, lon0);
+    const grassGroup = new THREE.Group(), landmarkGroup = new THREE.Group();
+    const creatureGroup = new THREE.Group(), resourceGroup = new THREE.Group();
+    group.add(grassGroup, landmarkGroup, creatureGroup, resourceGroup);
+    group.userData.detailGroups = { grassGroup, landmarkGroup, creatureGroup, resourceGroup };
+    group.userData.center = this.surfacePoint(lat0 + this.chunkAngle * 0.5, lon0 + this.chunkAngle * 0.5);
+    this.generateGrass(grassGroup, latIndex, lonIndex, lat0, lon0);
+    this.generateLandmarks(landmarkGroup, latIndex, lonIndex, lat0, lon0);
     this.worldSlice?.attachChunk(key, group, latIndex, lonIndex, lat0, lon0);
+    this.generateCreature(group, latIndex, lonIndex, lat0, lon0);
     this.scene.add(group);
     this.chunks.set(key, group);
   }
 
   generateGrass(group, latIndex, lonIndex, lat0, lon0) {
     const count = this.grassCount;
-    const geometry = new THREE.ConeGeometry(0.055, 0.62, 3);
-    geometry.translate(0, 0.31, 0);
-    const material = new THREE.MeshToonMaterial({ color: this.hash(latIndex, lonIndex) > 0.5 ? 0x71a957 : 0x5f984e });
-    const grass = new THREE.InstancedMesh(geometry, material, count);
+    const grass = new THREE.InstancedMesh(getGrassGeometry(), this.vegetation.grass, count);
+    const flowers = new THREE.InstancedMesh(getFlowerGeometry(), this.vegetation.flower, Math.ceil(count / 5));
     const matrix = new THREE.Matrix4();
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
-    for (let i = 0; i < count; i++) {
+    let blades = 0, blooms = 0;
+    for (let i = 0; i < count * 3 && blades < count; i++) {
       const lat = lat0 + this.chunkAngle * this.hash(latIndex * 43 + i, lonIndex * 7);
       const lon = lon0 + this.chunkAngle * this.hash(lonIndex * 37 + i, latIndex * 11);
+      const biome = this.biomeAt(lat, lon);
+      if (!['grassland', 'forest', 'wetland', 'coast'].includes(biome)) continue;
+      if (this.slopeAt(lat, lon) > 0.28) continue;
+      const { x, z } = this.valleyCoordinates(lat, lon);
+      if (x > -135 && x < 60 && Math.abs(z - this.riverCenter(x)) < 5) continue;
+      if (fbm3(x / 17 + 6.4, z / 17 - 2.8, 0.46, 3) < -0.32) continue;
       const position = this.surfacePoint(lat, lon, 0.02);
       quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), position.clone().normalize());
-      quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.hash(i, latIndex + lonIndex) * Math.PI));
-      const s = 0.65 + this.hash(i * 3, latIndex) * 0.8;
-      scale.set(s, s, s);
-      matrix.compose(position, quaternion, scale); grass.setMatrixAt(i, matrix);
+      quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.hash(i, latIndex + lonIndex) * Math.PI * 2));
+      const size = 0.65 + this.hash(i * 3, latIndex) * 0.95;
+      scale.set(size, size * (0.8 + this.hash(i + 91, lonIndex) * 0.55), size);
+      matrix.compose(position, quaternion, scale); grass.setMatrixAt(blades, matrix);
+      const tint = new THREE.Color(biome === 'forest' ? 0x6c9e58 : biome === 'wetland' ? 0x669a72 : 0x8ab869);
+      tint.offsetHSL(this.hash(i + 51, latIndex) * 0.05 - 0.025, 0, this.hash(i + 63, lonIndex) * 0.1 - 0.05);
+      grass.setColorAt(blades++, tint);
+      if (blooms < flowers.instanceMatrix.count && biome === 'grassland' && this.hash(i + 33, lonIndex) > 0.82) {
+        scale.setScalar(0.55 + this.hash(i + 89, latIndex) * 0.65);
+        matrix.compose(position.clone().addScaledVector(position.clone().normalize(), 0.02), quaternion, scale);
+        flowers.setMatrixAt(blooms++, matrix);
+      }
     }
-    grass.castShadow = true; grass.receiveShadow = true; group.add(grass);
+    grass.count = blades; flowers.count = blooms;
+    if (blades) { grass.instanceMatrix.needsUpdate = true; grass.instanceColor.needsUpdate = true; grass.userData.sharedResource = true; group.add(grass); }
+    if (blooms) { flowers.instanceMatrix.needsUpdate = true; flowers.userData.sharedResource = true; group.add(flowers); }
   }
 
   generateLandmarks(group, latIndex, lonIndex, lat0, lon0) {
-    const count = 2 + Math.floor(this.hash(latIndex, lonIndex) * 4);
-    for (let i = 0; i < count; i++) {
-      const lat = lat0 + this.chunkAngle * (0.12 + this.hash(latIndex * 17 + i, lonIndex) * 0.76);
-      const lon = lon0 + this.chunkAngle * (0.12 + this.hash(lonIndex * 23 + i, latIndex) * 0.76);
-      const position = this.surfacePoint(lat, lon, 0.05);
+    const centerLat = lat0 + this.chunkAngle * 0.5;
+    const centerLon = lon0 + this.chunkAngle * 0.5;
+    const biome = this.biomeAt(centerLat, centerLon);
+    const trees = { broadleaf: [], pine: [], blossom: [] };
+    const rocks = [];
+    const capacity = biome === 'forest' ? 7 : biome === 'grassland' ? 4 : biome === 'wetland' ? 2 : biome === 'highland' ? 3 : 1;
+    const matrix = new THREE.Matrix4();
+    const up = new THREE.Vector3(0, 1, 0);
+    for (let index = 0; index < capacity; index++) {
+      const lat = lat0 + this.chunkAngle * (0.12 + this.hash(latIndex * 17 + index, lonIndex) * 0.76);
+      const lon = lon0 + this.chunkAngle * (0.12 + this.hash(lonIndex * 23 + index, latIndex) * 0.76);
+      const { x, z } = this.valleyCoordinates(lat, lon);
+      if (Math.hypot(x - 7, z) < 23) continue;
+      if (x > -135 && x < 60 && Math.abs(z - this.riverCenter(x)) < 5) continue;
+      const slope = this.slopeAt(lat, lon);
+      const cluster = fbm3(x / 35 + 3.2, z / 35 - 1.7, 0.81, 3);
+      const position = this.surfacePoint(lat, lon, 0.02);
       const normal = position.clone().normalize();
-      const biome = this.biomeAt(lat, lon);
-      const object = new THREE.Group();
-      if (biome === 'forest' || biome === 'grassland') {
-        const height = 4.5 + this.hash(i, latIndex) * 4;
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, height * 0.62, 7), new THREE.MeshToonMaterial({ color: 0x664932 }));
-        trunk.position.y = height * 0.31;
-        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(height * 0.27, 1), new THREE.MeshToonMaterial({ color: biome === 'forest' ? 0x28845b : 0x54a666 }));
-        crown.position.y = height * 0.78; object.add(trunk, crown);
-      } else {
-        const crystalColor = biome === 'tundra' ? 0x9fe8ff : 0xd0a76a;
-        const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.45 + this.hash(i, lonIndex) * 0.5), new THREE.MeshToonMaterial({ color: crystalColor, emissive: crystalColor, emissiveIntensity: 0.35 }));
-        crystal.position.y = 0.55; object.add(crystal);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
+      quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(up, this.hash(index + 7, latIndex) * Math.PI * 2));
+      if ((biome === 'forest' || biome === 'grassland' || biome === 'wetland') && slope < 0.38 && cluster > -0.25) {
+        const kind = biome === 'forest' && this.hash(index, lonIndex + 13) > 0.64 ? 'pine'
+          : this.hash(index + 20, latIndex) > 0.93 ? 'blossom' : 'broadleaf';
+        const size = 0.8 + this.hash(index * 4, latIndex + lonIndex) * 0.48;
+        matrix.compose(position, quaternion, new THREE.Vector3(size, size, size));
+        trees[kind].push(matrix.clone());
+      } else if ((biome === 'highland' || slope > 0.22) && this.hash(index + 33, latIndex) > 0.2) {
+        const size = 0.7 + this.hash(index * 5, lonIndex) * 1.2;
+        matrix.compose(position, quaternion, new THREE.Vector3(size, size, size));
+        rocks.push(matrix.clone());
       }
-      object.position.copy(position);
-      object.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-      object.traverse((mesh) => { if (mesh.isMesh) mesh.castShadow = mesh.receiveShadow = true; });
-      group.add(object);
     }
-    // Rare ruins are tied to chunk coordinates, forming persistent discoveries
-    // rather than random decorations that change between visits.
-    if (this.hash(latIndex * 3, lonIndex * 5) > 0.86) {
-      const lat = lat0 + this.chunkAngle * 0.5;
-      const lon = lon0 + this.chunkAngle * 0.5;
-      const position = this.surfacePoint(lat, lon, 0.04);
-      const ruin = new THREE.Group();
-      const stone = new THREE.MeshToonMaterial({ color: 0x718a82 });
-      for (const x of [-1.15, 1.15]) {
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, 3.1, 7), stone);
-        pillar.position.set(x, 1.55, 0); pillar.castShadow = pillar.receiveShadow = true; ruin.add(pillar);
-      }
-      const lintel = new THREE.Mesh(new THREE.BoxGeometry(3, 0.38, 0.6), stone);
-      lintel.position.y = 3; lintel.castShadow = lintel.receiveShadow = true; ruin.add(lintel);
-      ruin.position.copy(position);
-      ruin.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), position.clone().normalize());
-      group.add(ruin);
+    for (const [kind, placements] of Object.entries(trees)) {
+      if (!placements.length) continue;
+      const mesh = new THREE.InstancedMesh(treeGeometry(kind), treeMaterial, placements.length);
+      placements.forEach((placement, index) => mesh.setMatrixAt(index, placement));
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.castShadow = true; mesh.receiveShadow = true; mesh.userData.sharedResource = true;
+      group.add(mesh);
+    }
+    if (rocks.length) {
+      const mesh = new THREE.InstancedMesh(rockGeometry(), rockMaterial, rocks.length);
+      rocks.forEach((placement, index) => mesh.setMatrixAt(index, placement));
+      mesh.instanceMatrix.needsUpdate = true; mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.userData.sharedResource = true;
+      group.add(mesh);
     }
   }
 
@@ -354,7 +446,7 @@ export class PlanetWorld {
     creature.userData.phase = this.hash(latIndex, lonIndex) * Math.PI * 2;
     creature.traverse((mesh) => { if (mesh.isMesh) mesh.castShadow = true; });
     anchor.add(creature); anchor.visible = this.creaturesVisible;
-    group.add(anchor);
+    (group.userData.detailGroups?.creatureGroup || group).add(anchor);
     (group.userData.creatures ||= []).push({ anchor, creature });
   }
 
@@ -380,10 +472,10 @@ export class PlanetWorld {
 
   setQuality(preset = 'balanced') {
     const config = {
-      high: { radius: 5, segments: 12, grass: 48, particles: 1, shadow: 2048 },
-      balanced: { radius: 4, segments: 10, grass: 34, particles: 0.75, shadow: 1024 },
-      low: { radius: 3, segments: 6, grass: 12, particles: 0.4, shadow: 512 },
-    }[preset] || { radius: 4, segments: 10, grass: 34, particles: 0.75, shadow: 1024 };
+      high: { radius: 5, segments: 14, grass: 120, particles: 1, shadow: 2048 },
+      balanced: { radius: 4, segments: 11, grass: 70, particles: 0.75, shadow: 1024 },
+      low: { radius: 3, segments: 7, grass: 25, particles: 0.4, shadow: 512 },
+    }[preset] || { radius: 4, segments: 11, grass: 70, particles: 0.75, shadow: 1024 };
     if (this.quality === preset && this.chunks.size) return;
     this.quality = preset;
     this.chunkRadius = config.radius; this.terrainSegments = config.segments;
@@ -405,8 +497,8 @@ export class PlanetWorld {
       this.weatherParticles = null;
     }
     const config = {
-      CLEAR: { fog: 0.0025, light: 3.1 }, RAIN: { fog: 0.008, light: 1.7 },
-      FOG: { fog: 0.016, light: 1.25 }, STORM: { fog: 0.012, light: 0.75 }, SNOW: { fog: 0.009, light: 2.1 },
+      CLEAR: { fog: 0.0032, light: 2.4 }, RAIN: { fog: 0.007, light: 1.65 },
+      FOG: { fog: 0.012, light: 1.1 }, STORM: { fog: 0.01, light: 0.9 }, SNOW: { fog: 0.007, light: 1.8 },
     }[type];
     this.scene.fog.density = config.fog; this.sun.intensity = config.light;
     if (!['RAIN', 'STORM', 'SNOW'].includes(type)) return;
@@ -433,11 +525,29 @@ export class PlanetWorld {
 
   update(time, dt, player = null) {
     if (!player) return;
+    this.vegetation.wind.value = time;
+    this.valley.update(time, player.position);
     this.weatherClock += dt;
     this.cloudLayer.rotation.y += dt * 0.004;
-    this.sun.position.applyAxisAngle(this.rotationAxis, dt * 0.006);
+    const east = new THREE.Vector3().crossVectors(this.rotationAxis, player.up).normalize();
+    if (east.lengthSq() < 0.01) east.set(1, 0, 0);
+    this.sun.position.copy(player.position).addScaledVector(player.up, 110).addScaledVector(east, -95);
+    this.sun.target.position.copy(player.position);
+    this.sun.target.updateMatrixWorld();
+    this.skyMaterial.uniforms.uUp.value.copy(player.up);
+    this.skyMaterial.uniforms.uSun.value.copy(this.sun.position).sub(player.position).normalize();
     this.streamTimer -= dt;
     if (this.streamTimer <= 0) { this.stream(player.position); this.streamTimer = 0.45; }
+    const detailDistance = this.quality === 'high' ? [85, 120, 70, 55]
+      : this.quality === 'low' ? [37, 60, 38, 28] : [58, 88, 48, 38];
+    for (const chunk of this.chunks.values()) {
+      const distance = chunk.userData.center.distanceTo(player.position);
+      const { grassGroup, landmarkGroup, creatureGroup, resourceGroup } = chunk.userData.detailGroups;
+      grassGroup.visible = distance < detailDistance[0];
+      landmarkGroup.visible = distance < detailDistance[1];
+      creatureGroup.visible = distance < detailDistance[2];
+      resourceGroup.visible = distance < detailDistance[3];
+    }
     if (this.creaturesVisible) for (const chunk of this.chunks.values()) for (const { creature } of chunk.userData.creatures || []) {
       const phase = time * 0.8 + creature.userData.phase;
       creature.position.set(Math.sin(phase) * 1.8, Math.sin(phase * 2) * 0.12, Math.cos(phase) * 1.8);

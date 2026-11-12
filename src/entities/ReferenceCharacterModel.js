@@ -114,4 +114,5 @@ export function applyReferenceCharacterModel(character, appearance) {
   add(character.rightArm, new THREE.ConeGeometry(0.12, 1.3, 4), steel, [0, -1.77, -0.07], [1, 1, 0.52], [0, 0, Math.PI]);
   gem(character.rightArm, [0, -0.55, 0.03], 0.09);
   character.referenceModel = appearance;
+  character.fallbackObjects = [...character.group.children];
 }

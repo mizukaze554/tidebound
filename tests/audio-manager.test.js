@@ -17,6 +17,7 @@ test('audio settings persist independently and draw has its own track', () => {
   assert.equal(restored.sfxVolume, 0.8);
   assert.equal(restored.muted, true);
   assert.match(AUDIO_FILES.music.draw, /draw-music\.mp3$/);
+  assert.equal(AUDIO_FILES.music.exploration, '/assets/audio/kulakovka-action-game-620581.mp3');
 });
 
 test('music stops when gameplay ends and stays stopped after unlock', () => {

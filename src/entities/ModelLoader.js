@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export class ModelLoader {
   constructor() {
     this.loader = new GLTFLoader();
+    this.loader.setMeshoptDecoder(MeshoptDecoder);
     this.cache = new Map();
   }
 
@@ -30,6 +32,7 @@ export class ModelLoader {
       const scaledBox = new THREE.Box3().setFromObject(model);
       model.position.y -= scaledBox.min.y;
       model.rotation.y = Math.PI;
+      model.userData.restY = model.position.y;
       character.setExternalModel(model, gltf.animations);
       return true;
     } catch {

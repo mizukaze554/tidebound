@@ -43,7 +43,7 @@ export class Game {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.0;
     this.container.append(this.renderer.domElement);
 
     this.world = new PlanetWorld(this.scene);
@@ -58,7 +58,7 @@ export class Game {
     catch (error) { this.discoveryState = null; this.discoverySaveError = error; }
     this.worldSlice = new WorldSlice(this.world, this.scene, this.discoveryStorage);
     this.world.worldSlice = this.worldSlice;
-    this.world.blocksMovement = (position, radius) => this.worldSlice.blocksMovement(position, radius);
+    this.world.blocksMovement = (position, radius) => this.worldSlice.blocksMovement(position, radius) || this.world.valley.blocksMovement(position, radius);
     for (const [key, group] of this.world.chunks) {
       const [latIndex, lonIndex] = key.split(':').map(Number);
       this.worldSlice.attachChunk(key, group, latIndex, lonIndex, latIndex * this.world.chunkAngle - Math.PI / 2, lonIndex * this.world.chunkAngle - Math.PI);
@@ -106,7 +106,7 @@ export class Game {
     }
     this.exploreHud = document.createElement('section');
     this.exploreHud.className = 'explore-hud hidden';
-    this.exploreHud.innerHTML = '<b>THE LIVING WORLD</b><span data-vitals>100 HP · 70 MP</span><span class="explore-hint">Gather · build · discover · watch for wildlings</span><button type="button" data-gather>GATHER</button><button type="button" data-journal>JOURNAL</button><button type="button" data-help>?</button><button type="button" data-pause>Ⅱ</button>';
+    this.exploreHud.innerHTML = '<b>AZURE VALLEY</b><span data-vitals>100 HP · 70 MP</span><button type="button" data-gather>GATHER</button><button type="button" data-journal>JOURNAL</button><button type="button" data-help>?</button><button type="button" data-pause>Ⅱ</button>';
     this.exploreHud.querySelector('[data-gather]').onclick = () => this.gather();
     this.exploreHud.querySelector('[data-journal]').onclick = () => this.openJournal();
     this.exploreHud.querySelector('[data-help]').onclick = () => { this.pause(); this.menu.showHelp(); };
@@ -160,8 +160,9 @@ export class Game {
     applyReferenceCharacterModel(this.player, this.gender);
     this.applyEquipment();
     this.enemy = mode === 'duel' ? new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true }) : null;
-    const enemy = this.enemy;
+    const player = this.player, enemy = this.enemy;
     this.modelLoaderPromise.then((loader) => {
+      if (this.player === player) loader.applyToCharacter(player, `/assets/models/wayfarer-${this.gender}.glb`);
       if (enemy && this.enemy === enemy) loader.applyToCharacter(enemy, '/assets/models/crimson-echo.glb');
     });
     this.world.updateUp(this.player);
@@ -314,6 +315,11 @@ export class Game {
       if (this.state !== 'playing') return;
       this.player.update(dt, movement);
       this.world.constrain(this.player);
+      if (this.world.blocksMovement(this.player.position, this.player.radius)
+        && !this.world.blocksMovement(this.player.previousPosition, this.player.radius)) {
+        this.player.position.copy(this.player.previousPosition);
+        this.world.constrain(this.player);
+      }
       if (!this.player.alive) this.respawnPlayer();
       const traveled = this.player.previousPosition.distanceTo(this.player.position);
       if (traveled < 2) {

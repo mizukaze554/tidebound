@@ -3,6 +3,7 @@
  * Asset's procedural.seedSalt can be combined with world/chunk/instance seed on host.
  */
 import * as THREE from 'three';
+import { makeRock, makeTree } from '../EnvironmentModels.js';
 
 const shared = new Map();
 function material(hex, emissive=false) {
@@ -31,15 +32,22 @@ export function makeWorldAsset(asset) {
         if(asset.geometryPreset==='flower_stems') part(g,sphere,c(1),[x,0.56,z],[.24,.24,.24],glow);}
       break;
     case 'tree':
-      part(g,cyl,'#674831',[0,1.1,0],[.42,2.2,.42]);
-      for(let i=0;i<3;i++)part(g,sphere,c(i),[i*.3-.3,2.3+i*.22,0],[1.6,1.3,1.5],glow);break;
+      g.add(makeTree(/pine|fir|spruce/i.test(asset.name) ? 'pine' : /cherry|blossom/i.test(asset.name) ? 'blossom' : 'broadleaf'));
+      break;
     case 'shrub':
       for(let i=0;i<4;i++)part(g,sphere,c(i),[Math.sin(i*2)*.34,.5,Math.cos(i*2)*.34],[.85,.9,.85],glow);break;
     case 'mushrooms':
       for(let i=0;i<4;i++){let x=i*.35-.5;
         part(g,cyl,'#d8ceb8',[x,.25,0],[.14,.5,.14]);part(g,sphere,c(i),[x,.55,0],[.55,.24,.55],glow);}break;
     case 'rocks': case 'rock_cluster':case 'ore_cluster':case 'sand_rocks':
-      for(let i=0;i<5;i++)part(g,new THREE.DodecahedronGeometry(.55,0),c(i),[Math.sin(i*2.1)*.6,.26,Math.cos(i*2.1)*.5],[.8+(i%2)*.4,.8,.85],glow);break;
+      for(let i=0;i<4;i++) {
+        const rock = makeRock();
+        rock.position.set(Math.sin(i*2.1)*.7,.2,Math.cos(i*2.1)*.6);
+        rock.scale.set(.7+(i%2)*.45,.55+i*.08,.7+(i%3)*.22);
+        rock.rotation.y = i * 1.31;
+        g.add(rock);
+      }
+      break;
     case 'rock_mass':case 'mountain_mass':
       for(let i=0;i<3;i++)part(g,cone,c(i),[(i-1)*.75,(2+i)*.5,0],[1.5+(i%2),2+i,1.4],glow);break;
     case 'water_plane':
@@ -73,7 +81,7 @@ export function makeWorldAsset(asset) {
       part(g,cyl,c(0),[0,.4,0],[.7,.8,.7]);part(g,sphere,c(1),[0,.9,0],[.55,.35,.55],glow);break;
     default: throw Error('Unknown geometryPreset: '+asset.geometryPreset);
   }
-  g.scale.setScalar(asset.procedural.scale);
+  g.scale.setScalar(asset.procedural.scale * (asset.geometryPreset === 'tree' ? 1.45 : 1));
   g.userData.assetId=asset.id;
   return g;
 }
@@ -84,5 +92,5 @@ export function alignToTerrain(object, normal) {
 }
 /** Dispose unique geometries while leaving shared cached materials and geometries intact. */
 export function disposeWorldAsset(group) {
-  group.traverse(o=>{if(o.isMesh && o.geometry !==box && o.geometry !==sphere && o.geometry !==cone && o.geometry !==cyl) o.geometry.dispose();});
+  group.traverse(o=>{if(o.isMesh && !o.userData.sharedGeometry && o.geometry !==box && o.geometry !==sphere && o.geometry !==cone && o.geometry !==cyl) o.geometry.dispose();});
 }

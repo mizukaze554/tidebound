@@ -340,6 +340,15 @@ export class Character {
     }
     this.animate(movementState);
     this.modelController?.update(dt, this.animationState(movementState));
+    if (this.externalModel && !this.modelController?.actions.size) {
+      const step = movementState === 2 ? 13 : 8;
+      const bob = movementState ? Math.sin(this.animTime * step) * (movementState === 2 ? 0.07 : 0.04) : Math.sin(this.animTime * 2) * 0.015;
+      const strike = this.attack ? Math.sin((1 - this.actionTimer / this.attack.duration) * Math.PI) : 0;
+      this.externalModel.position.y = this.externalModel.userData.restY + bob;
+      this.externalModel.rotation.x = this.blocking ? -0.16 : this.attack ? -0.2 * strike : movementState === 2 ? 0.07 : 0;
+      this.externalModel.rotation.z = this.attack ? (this.attack.step === 2 ? -1 : 1) * 0.16 * strike
+        : this.dodgeTimer > 0 ? 0.24 : 0;
+    }
   }
 
   animate(movement) {

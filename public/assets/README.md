@@ -1,18 +1,19 @@
 # TIDEBOUND assets
 
-The game uses portrait-inspired geometric 3D characters and synthesized sound effects when optional files are absent. Five generated music loops and one owner-supplied exploration track are bundled.
+The game uses optimized owner-supplied 3D characters and synthesized sound effects when optional files are absent. Five generated music loops and one owner-supplied exploration track are bundled.
 
 ## Models
 
-Place rigged GLB files in `public/assets/models/`:
+Bundled GLB files in `public/assets/models/`:
 
 - `wayfarer-male.glb`
 - `wayfarer-female.glb`
-- `crimson-echo.glb`
+
+An optional `crimson-echo.glb` can be added for the legacy arena character. The two bundled player models have no rig or animation clips, so they use whole-body movement; the built-in character mesh is the fallback.
 
 Animation clip names should include recognizable words such as `Idle`, `Walk`, `Run`, `Jump`, `Attack`, `Block`, `Dodge`, `Hit`, and `Defeat`. Clips may be embedded in each GLB.
 
-TIDEBOUND v1.3 also recognizes `Sprint` and `Landing`/`Land`. Gameplay capsules remain independent of model geometry, so visual scale or skeleton differences do not alter combat reach. Each GLB should contain animations compatible with its own skeleton; animation clips are not transferred between incompatible rigs.
+Gameplay capsules remain independent of model geometry, so visual scale does not alter combat reach. Rigged replacement GLBs may contain their own clips; clips are not transferred between incompatible rigs. See `ASSETS.md` at the repository root for optional environment models.
 
 ## Audio
 
@@ -20,7 +21,7 @@ Bundled music in `public/assets/audio/`. The exploration track is the user suppl
 
 - `menu-music.mp3`
 - `combat-music.mp3`
-- `exploration-music.mp3`
+- `kulakovka-action-game-620581.mp3` (exploration)
 - `victory-music.mp3`
 - `defeat-music.mp3`
 - `draw-music.mp3`

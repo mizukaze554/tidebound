@@ -1,7 +1,7 @@
 const AUDIO_FILES = {
   music: {
     menu: '/assets/audio/menu-music.mp3',
-    exploration: '/assets/audio/exploration-music.mp3',
+    exploration: '/assets/audio/kulakovka-action-game-620581.mp3',
     combat: '/assets/audio/combat-music.mp3',
     victory: '/assets/audio/victory-music.mp3',
     defeat: '/assets/audio/defeat-music.mp3',
