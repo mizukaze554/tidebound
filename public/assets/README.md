@@ -1,6 +1,6 @@
-# Optional TIDEBOUND assets
+# TIDEBOUND assets
 
-The game runs safely without these files by using geometric characters and synthesized sound fallbacks.
+The game uses geometric characters and synthesized sound effects when optional files are absent. Six original music loops are bundled.
 
 ## Models
 
@@ -16,7 +16,7 @@ TIDEBOUND v1.3 also recognizes `Sprint` and `Landing`/`Land`. Gameplay capsules 
 
 ## Audio
 
-Place audio files in `public/assets/audio/`:
+Bundled music in `public/assets/audio/`:
 
 - `menu-music.mp3`
 - `combat-music.mp3`
@@ -24,6 +24,9 @@ Place audio files in `public/assets/audio/`:
 - `victory-music.mp3`
 - `defeat-music.mp3`
 - `draw-music.mp3`
+
+Optional sound effects in the same directory:
+
 - `sword-hit.mp3`
 - `sword-swing.mp3`
 - `block.mp3`
@@ -39,4 +42,4 @@ Place audio files in `public/assets/audio/`:
 - `wind-skill.mp3`
 - `earth-skill.mp3`
 
-Missing files are optional: music remains silent and sound effects use Web Audio synthesis.
+Missing optional sound effects use Web Audio synthesis. The bundled music can be regenerated with `python3 tools/generate_music.py` when ffmpeg is installed.

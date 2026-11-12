@@ -1,17 +1,15 @@
 import * as THREE from 'three';
 
-// The rendered globe is scaled for stable browser physics. Its declared surface
-// area is 9.6 million km² (approximately China); kmPerUnit maps that authored
-// scale onto the compact Three.js globe.
+// A globe-scale world is rendered in engine units for stable browser physics.
 export class PlanetWorld {
   constructor(scene) {
     this.scene = scene;
-    this.radius = 340;
-    this.realAreaKm2 = 9_600_000;
+    this.radius = 700;
+    this.realAreaKm2 = 510_100_000;
     this.realRadiusKm = Math.sqrt(this.realAreaKm2 / (4 * Math.PI));
     this.kmPerUnit = this.realRadiusKm / this.radius;
-    this.chunkAngle = Math.PI * 2 / 144;
-    this.chunkRadius = 3;
+    this.chunkAngle = Math.PI * 2 / 288;
+    this.chunkRadius = 4;
     this.terrainSegments = 10;
     this.grassCount = 34;
     this.particleMultiplier = 0.75;
@@ -24,6 +22,7 @@ export class PlanetWorld {
     this.weather = 'CLEAR';
     this.weatherParticles = null;
     this.weatherPositions = null;
+    this.creaturesVisible = false;
     this.rotationAxis = new THREE.Vector3(0, 1, 0);
     this.buildAtmosphere();
     this.buildClouds();
@@ -47,7 +46,7 @@ export class PlanetWorld {
       }),
     );
     this.scene.add(sky);
-    this.scene.fog = new THREE.FogExp2(0xb8dce1, 0.006);
+    this.scene.fog = new THREE.FogExp2(0xb8dce1, 0.0025);
     this.hemi = new THREE.HemisphereLight(0xd9f4ff, 0x46634c, 2.2);
     this.scene.add(this.hemi);
     this.sun = new THREE.DirectionalLight(0xfff1cb, 3.4);
@@ -140,13 +139,13 @@ export class PlanetWorld {
     const continental = Math.sin(lon * 2 + Math.sin(lat * 3.4)) * 1.8;
     const ridges = Math.abs(Math.sin(lon * 8 + lat * 5.7) * Math.cos(lat * 9.1 - lon * 3));
     const detail = Math.sin(lon * 24 + lat * 19.3) * 0.42 + Math.sin(lon * 52 - lat * 37.4) * 0.18;
-    return 0.8 + continental * 0.45 + ridges * 2.2 + detail;
+    return 2.5 + continental * 0.8 + ridges * 4.2 + detail * 1.6;
   }
 
   biomeAt(lat, lon, height = this.heightAt(lat, lon)) {
     const moisture = Math.sin(lon * 5 - lat * 7.9) * 0.5 + 0.5;
     if (Math.abs(lat) > 1.05) return 'tundra';
-    if (height > 3.4) return 'highland';
+    if (height > 6) return 'highland';
     if (moisture < 0.25) return 'steppe';
     if (moisture > 0.72) return 'forest';
     return 'grassland';
@@ -259,6 +258,7 @@ export class PlanetWorld {
     const group = new THREE.Group(); group.add(terrain);
     this.generateGrass(group, latIndex, lonIndex, lat0, lon0);
     this.generateLandmarks(group, latIndex, lonIndex, lat0, lon0);
+    this.generateCreature(group, latIndex, lonIndex, lat0, lon0);
     this.scene.add(group);
     this.chunks.set(key, group);
   }
@@ -295,10 +295,11 @@ export class PlanetWorld {
       const biome = this.biomeAt(lat, lon);
       const object = new THREE.Group();
       if (biome === 'forest' || biome === 'grassland') {
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.25, 1.8, 6), new THREE.MeshToonMaterial({ color: 0x664932 }));
-        trunk.position.y = 0.9;
-        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8 + this.hash(i, latIndex) * 0.4, 1), new THREE.MeshToonMaterial({ color: biome === 'forest' ? 0x28845b : 0x54a666 }));
-        crown.position.y = 2.1; object.add(trunk, crown);
+        const height = 4.5 + this.hash(i, latIndex) * 4;
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, height * 0.62, 7), new THREE.MeshToonMaterial({ color: 0x664932 }));
+        trunk.position.y = height * 0.31;
+        const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(height * 0.27, 1), new THREE.MeshToonMaterial({ color: biome === 'forest' ? 0x28845b : 0x54a666 }));
+        crown.position.y = height * 0.78; object.add(trunk, crown);
       } else {
         const crystalColor = biome === 'tundra' ? 0x9fe8ff : 0xd0a76a;
         const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.45 + this.hash(i, lonIndex) * 0.5), new THREE.MeshToonMaterial({ color: crystalColor, emissive: crystalColor, emissiveIntensity: 0.35 }));
@@ -329,6 +330,36 @@ export class PlanetWorld {
     }
   }
 
+  generateCreature(group, latIndex, lonIndex, lat0, lon0) {
+    if (this.hash(latIndex, lonIndex + 113) < 0.62) return;
+    const lat = lat0 + this.chunkAngle * 0.5;
+    const lon = lon0 + this.chunkAngle * 0.5;
+    const anchor = new THREE.Group();
+    anchor.position.copy(this.surfacePoint(lat, lon, 0.3));
+    anchor.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), anchor.position.clone().normalize());
+    const creature = new THREE.Group();
+    const coat = new THREE.MeshToonMaterial({ color: this.hash(latIndex, lonIndex) > 0.5 ? 0x8265a2 : 0x4f8d89 });
+    const glow = new THREE.MeshToonMaterial({ color: 0xffe5a0, emissive: 0xffad57, emissiveIntensity: 0.9 });
+    const body = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 1), coat);
+    body.position.y = 1.1; body.scale.set(1, 0.75, 1.2); creature.add(body);
+    for (const x of [-0.48, 0.48]) {
+      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.65, 5), coat);
+      horn.position.set(x, 1.95, 0.05); creature.add(horn);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 7, 5), glow);
+      eye.position.set(x * 0.5, 1.25, 0.87); creature.add(eye);
+    }
+    creature.userData.phase = this.hash(latIndex, lonIndex) * Math.PI * 2;
+    creature.traverse((mesh) => { if (mesh.isMesh) mesh.castShadow = true; });
+    anchor.add(creature); anchor.visible = this.creaturesVisible;
+    group.add(anchor);
+    (group.userData.creatures ||= []).push({ anchor, creature });
+  }
+
+  setCreaturesVisible(visible) {
+    this.creaturesVisible = visible;
+    for (const chunk of this.chunks.values()) for (const item of chunk.userData.creatures || []) item.anchor.visible = visible;
+  }
+
   removeChunk(key, chunk) {
     this.scene.remove(chunk);
     const geometries = new Set(); const materials = new Set();
@@ -344,10 +375,10 @@ export class PlanetWorld {
 
   setQuality(preset = 'balanced') {
     const config = {
-      high: { radius: 4, segments: 12, grass: 48, particles: 1, shadow: 2048 },
-      balanced: { radius: 3, segments: 10, grass: 34, particles: 0.75, shadow: 1024 },
-      low: { radius: 2, segments: 6, grass: 12, particles: 0.4, shadow: 512 },
-    }[preset] || { radius: 3, segments: 10, grass: 34, particles: 0.75, shadow: 1024 };
+      high: { radius: 5, segments: 12, grass: 48, particles: 1, shadow: 2048 },
+      balanced: { radius: 4, segments: 10, grass: 34, particles: 0.75, shadow: 1024 },
+      low: { radius: 3, segments: 6, grass: 12, particles: 0.4, shadow: 512 },
+    }[preset] || { radius: 4, segments: 10, grass: 34, particles: 0.75, shadow: 1024 };
     if (this.quality === preset && this.chunks.size) return;
     this.quality = preset;
     this.chunkRadius = config.radius; this.terrainSegments = config.segments;
@@ -369,8 +400,8 @@ export class PlanetWorld {
       this.weatherParticles = null;
     }
     const config = {
-      CLEAR: { fog: 0.0045, light: 3.1 }, RAIN: { fog: 0.012, light: 1.7 },
-      FOG: { fog: 0.024, light: 1.25 }, STORM: { fog: 0.018, light: 0.75 }, SNOW: { fog: 0.014, light: 2.1 },
+      CLEAR: { fog: 0.0025, light: 3.1 }, RAIN: { fog: 0.008, light: 1.7 },
+      FOG: { fog: 0.016, light: 1.25 }, STORM: { fog: 0.012, light: 0.75 }, SNOW: { fog: 0.009, light: 2.1 },
     }[type];
     this.scene.fog.density = config.fog; this.sun.intensity = config.light;
     if (!['RAIN', 'STORM', 'SNOW'].includes(type)) return;
@@ -402,6 +433,11 @@ export class PlanetWorld {
     this.sun.position.applyAxisAngle(this.rotationAxis, dt * 0.006);
     this.streamTimer -= dt;
     if (this.streamTimer <= 0) { this.stream(player.position); this.streamTimer = 0.45; }
+    if (this.creaturesVisible) for (const chunk of this.chunks.values()) for (const { creature } of chunk.userData.creatures || []) {
+      const phase = time * 0.8 + creature.userData.phase;
+      creature.position.set(Math.sin(phase) * 1.8, Math.sin(phase * 2) * 0.12, Math.cos(phase) * 1.8);
+      creature.rotation.y = -phase;
+    }
     const cycle = ['CLEAR', 'RAIN', 'FOG', 'STORM', 'SNOW'];
     const next = cycle[Math.floor(this.weatherClock / 40) % cycle.length];
     if (next !== this.weather) this.setWeather(next, player);

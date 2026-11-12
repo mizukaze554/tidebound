@@ -4,11 +4,13 @@ export class Menu {
   constructor(root, handlers) {
     this.root = root; this.handlers = handlers;
     this.main = this.make('main-menu', `
-      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon-192.png" alt=""><small>THE LIVING DUEL</small></div><h1>TIDE<span>BOUND</span></h1><p>Shape the elements. Read your rival. Write a new legend<br>on a seamless world that remembers every technique.</p><div class="menu-actions"><button class="primary-button" data-start>ENTER THE DUEL <i>→</i></button><button class="ghost-button" data-skills>SKILL CREATOR 2.0</button><button class="ghost-button hidden" data-install>INSTALL TIDEBOUND</button><button class="text-button" data-settings>SETTINGS</button></div></div><div class="menu-footer"><span>v1.3 · THE LIVING DUEL</span><span>OFFLINE READY · CUSTOM ABILITIES</span></div>`);
+      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon-192.png" alt=""><small>THE LIVING WORLD</small></div><h1>TIDE<span>BOUND</span></h1><p>Explore a vast living world, or test your skills in a duel.</p><div class="menu-actions"><button class="primary-button" data-start>ENTER THE DUEL <i>→</i></button><button class="ghost-button" data-explore>PEACEFUL EXPLORE</button><button class="ghost-button" data-skills>SKILL CREATOR 2.0</button><button class="ghost-button hidden" data-install>INSTALL TIDEBOUND</button><button class="text-button" data-help>HOW TO PLAY</button><button class="text-button" data-settings>SETTINGS</button></div></div><div class="menu-footer"><span>v1.4 · THE LIVING WORLD</span><span>OFFLINE READY · CUSTOM ABILITIES</span></div>`);
     this.main.querySelector('[data-start]').addEventListener('click', (event) => {
       event.preventDefault();
-      this.showCharacter();
+      this.showCharacter('duel');
     });
+    this.main.querySelector('[data-explore]').onclick = () => this.showCharacter('explore');
+    this.main.querySelector('[data-help]').onclick = () => this.showHelp();
     this.main.querySelector('[data-skills]').onclick = handlers.skills;
     this.main.querySelector('[data-settings]').onclick = () => this.showSettings();
 
@@ -25,7 +27,7 @@ export class Menu {
           card.classList.toggle('selected', selected);
           card.setAttribute('aria-pressed', String(selected));
         });
-        this.character.querySelector('[data-confirm]').innerHTML = `ENTER WORLD AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
+        this.character.querySelector('[data-confirm]').innerHTML = `${this.selectedMode === 'explore' ? 'EXPLORE' : 'ENTER WORLD'} AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
       });
     });
     this.character.querySelector('[data-confirm]').addEventListener('click', (event) => {
@@ -34,7 +36,7 @@ export class Menu {
       if (button.disabled) return;
       button.disabled = true;
       try {
-        handlers.start(this.selectedGender);
+        handlers.start(this.selectedGender, this.selectedMode);
       } catch (error) {
         button.disabled = false;
         console.error('Unable to start TIDEBOUND match:', error);
@@ -43,11 +45,12 @@ export class Menu {
     });
     this.character.querySelector('[data-back]').onclick = () => this.showMain();
 
-    this.pause = this.make('pause-menu hidden', `<div class="pause-panel panel-cut"><small>MATCH SUSPENDED</small><h2>PAUSED</h2><button class="primary-button" data-resume>RESUME CURRENT</button><button class="ghost-button" data-skills>SKILL CREATOR</button><button class="ghost-button" data-restart>RESTART MATCH</button><button class="ghost-button" data-settings>SETTINGS</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
+    this.pause = this.make('pause-menu hidden', `<div class="pause-panel panel-cut"><small>GAME PAUSED</small><h2>PAUSED</h2><button class="primary-button" data-resume>RESUME CURRENT</button><button class="ghost-button" data-help>HOW TO PLAY</button><button class="ghost-button" data-skills>SKILL CREATOR</button><button class="ghost-button" data-restart>RESTART</button><button class="ghost-button" data-settings>SETTINGS</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
     this.pause.querySelector('[data-resume]').onclick = handlers.resume;
     this.pause.querySelector('[data-restart]').onclick = handlers.restart;
     this.pause.querySelector('[data-main]').onclick = handlers.main;
     this.pause.querySelector('[data-skills]').onclick = handlers.skills;
+    this.pause.querySelector('[data-help]').onclick = () => this.showHelp();
     this.pause.querySelector('[data-settings]').onclick = () => this.showSettings();
 
     this.result = this.make('result-screen hidden', `<div class="result-panel panel-cut"><small data-kicker>THE CURRENT SETTLES</small><h2 data-title>VICTORY</h2><p data-copy></p><div class="result-stats"><div><strong data-duration>00:00</strong><span>DUEL TIME</span></div><div><strong data-dealt>0</strong><span>DAMAGE DEALT</span></div><div><strong data-received>0</strong><span>DAMAGE RECEIVED</span></div><div><strong data-hits>0</strong><span>HITS</span></div><div><strong data-blocks>0</strong><span>BLOCKS</span></div><div><strong data-dodges>0</strong><span>DODGES</span></div><div><strong data-used>0</strong><span>SKILLS USED</span></div></div><button class="primary-button" data-restart>FIGHT AGAIN</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
@@ -66,13 +69,18 @@ export class Menu {
     this.settings.querySelector('[data-shake]').onchange = (e) => handlers.shake(e.target.checked);
     this.settings.querySelector('[data-performance]').onchange = (e) => handlers.performance(e.target.checked);
     this.settings.querySelector('[data-fullscreen]').onclick = handlers.fullscreen;
+    this.help = this.make('help-screen hidden', `<div class="help-panel panel-cut"><button class="icon-button" data-close aria-label="Close help">×</button><small>FIELD GUIDE</small><h2>HOW TO PLAY</h2><p><b>Peaceful Explore</b> has no timer or enemy attacks. Walk through the world and watch the roaming creatures. Use Pause to return to the title.</p><p><b>Duel</b> is a three-minute fight against the Crimson Echo. Move, dodge, block, and use your equipped skills to win.</p><div class="help-columns"><div><h3>KEYBOARD & MOUSE</h3><p>WASD move · Shift sprint · Space jump<br>Drag mouse to look · Left click attack<br>Right click block · Q dodge · X heavy<br>E / R / F skills · Tab target lock · Esc pause</p></div><div><h3>MOBILE LANDSCAPE</h3><p>Left stick moves · Drag the right side to look<br>Round buttons jump, attack, dodge, and block<br>E / R / F use skills · Ⅱ pauses</p></div></div><p>Sound starts after your first tap or key press. Adjust music and effects in Settings.</p></div>`);
+    this.help.querySelector('[data-close]').onclick = () => this.help.classList.add('hidden');
   }
 
   make(className, html) { const el = document.createElement('section'); el.className = `overlay ${className}`; el.innerHTML = html; this.root.append(el); return el; }
   allScreens() { return [this.main, this.character, this.pause, this.result]; }
   show(el) { this.allScreens().forEach((s) => s.classList.add('hidden')); el.classList.remove('hidden'); animate(el.children, { opacity: [0, 1], translateY: [15, 0], delay: (_, i) => i * 70, duration: 500, ease: 'outExpo' }); }
   showMain() { this.show(this.main); }
-  showCharacter() {
+  showCharacter(mode = 'duel') {
+    this.selectedMode = mode;
+    this.character.querySelector('.screen-heading small').textContent = mode === 'explore' ? 'PEACEFUL EXPLORE' : 'CHOOSE YOUR VESSEL';
+    this.character.querySelector('[data-confirm]').innerHTML = `${mode === 'explore' ? 'EXPLORE' : 'ENTER WORLD'} AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
     this.character.querySelector('[data-confirm]').disabled = false;
     this.character.querySelector('[data-start-error]')?.remove();
     this.show(this.character);
@@ -80,6 +88,7 @@ export class Menu {
   showPause() { this.show(this.pause); }
   hideAll() { this.allScreens().forEach((s) => s.classList.add('hidden')); }
   showSettings() { this.settings.classList.remove('hidden'); animate(this.settings.querySelector('.settings-panel'), { opacity: [0, 1], scale: [0.96, 1], duration: 300 }); }
+  showHelp() { this.help.classList.remove('hidden'); }
   setAudioSettings(audio) {
     const music = this.settings.querySelector('[data-music]');
     const sfx = this.settings.querySelector('[data-sfx]');

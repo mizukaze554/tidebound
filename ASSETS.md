@@ -1,6 +1,6 @@
 # TIDEBOUND asset manifest
 
-TIDEBOUND v1.3 does not bundle third-party character models, music, or sound-effect packs. The game remains functional with procedural character fallbacks and synthesized Web Audio effects.
+TIDEBOUND bundles original generated music loops and procedural character fallbacks. No third-party character models or sound-effect packs are included.
 
 ## Bundled artwork
 
@@ -22,7 +22,7 @@ GLB and glTF loading is implemented with `GLTFLoader`. Embedded clips are mapped
 
 ## Optional audio files
 
-See `public/assets/README.md` for the complete filename list. Missing music remains silent; missing sound effects use small synthesized fallbacks.
+Six original music loops are bundled in `public/assets/audio/`. Their generator is `tools/generate_music.py`. Missing sound effects use small synthesized fallbacks. See `public/assets/README.md` for optional sound-effect filenames.
 
 ## Licensing
 

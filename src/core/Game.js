@@ -28,10 +28,9 @@ export class Game {
     if (this.initialized) return;
     this.initialized = true;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 2200);
+    this.camera = new THREE.PerspectiveCamera(58, 1, 0.1, 2200);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-    this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -59,10 +58,10 @@ export class Game {
     this.skillSystem = new SkillSystem(this.scene, this.effects, (target, result) => this.onDamage(target, result));
     this.combat = new CombatSystem(this.effects, (target, result) => this.onDamage(target, result));
     this.menu = new Menu(this.uiRoot, {
-      start: (gender) => this.start(gender),
+      start: (gender, mode) => this.start(gender, mode),
       skills: () => this.skillEditor.open(),
       resume: () => this.resume(),
-      restart: () => this.start(this.gender),
+      restart: () => this.start(this.gender, this.mode),
       main: () => this.returnToMenu(),
       difficulty: (value) => { this.difficulty = value; this.ai?.setDifficulty(value); },
       scale: (value) => { this.renderScale = value; this.resize(); },
@@ -76,6 +75,12 @@ export class Game {
       fullscreen: () => this.toggleFullscreen(),
     });
     this.menu.showMain();
+    this.exploreHud = document.createElement('section');
+    this.exploreHud.className = 'explore-hud hidden';
+    this.exploreHud.innerHTML = '<b>PEACEFUL EXPLORE</b><span>Roam freely · creatures are friendly</span><button type="button" data-help>?</button><button type="button" data-pause>Ⅱ</button>';
+    this.exploreHud.querySelector('[data-help]').onclick = () => { this.pause(); this.menu.showHelp(); };
+    this.exploreHud.querySelector('[data-pause]').onclick = () => this.pause();
+    this.uiRoot.append(this.exploreHud);
     this.menu.setAudioSettings(this.audio);
     this.hud.setSkills(this.skills);
     const mobile = matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory <= 4);
@@ -92,38 +97,46 @@ export class Game {
     this.uiRoot.addEventListener('click', (event) => { if (event.target.closest('button')) this.audio.playSfx('ui'); });
 
     window.addEventListener('resize', () => this.resize());
+    window.addEventListener('orientationchange', () => this.resize());
+    window.visualViewport?.addEventListener('resize', () => this.resize());
+    window.visualViewport?.addEventListener('scroll', () => this.resize());
     window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && !e.repeat) this.togglePause(); });
     window.addEventListener('blur', () => { if (this.state === 'playing') this.pause(); });
     this.animate();
   }
 
-  start(gender = this.gender) {
-    this.gender = gender;
+  start(gender = this.gender, mode = 'duel') {
+    this.gender = gender; this.mode = mode;
     this.clearCharacters();
     this.effects?.clear?.();
     this.skillSystem?.clear?.();
     const spawn = this.world.spawnPositions();
     this.player = new Character(this.scene, { color: 0x267bb4, accent: 0x5ee3ff, name: 'Wayfarer', position: spawn.player, gender });
-    this.enemy = new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true });
+    this.enemy = mode === 'duel' ? new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true }) : null;
     const player = this.player, enemy = this.enemy;
     this.modelLoaderPromise.then((loader) => {
       if (this.player === player) loader.applyToCharacter(player, `/assets/models/wayfarer-${gender}.glb`);
-      if (this.enemy === enemy) loader.applyToCharacter(enemy, '/assets/models/crimson-echo.glb');
+      if (enemy && this.enemy === enemy) loader.applyToCharacter(enemy, '/assets/models/crimson-echo.glb');
     });
-    this.world.updateUp(this.player); this.world.updateUp(this.enemy);
-    this.ai = new EnemyAI(this.enemy, this.player, this, this.difficulty);
+    this.world.updateUp(this.player);
+    if (this.enemy) this.world.updateUp(this.enemy);
+    this.ai = this.enemy ? new EnemyAI(this.enemy, this.player, this, this.difficulty) : null;
     this.enemySkills = [DEFAULT_SKILLS[1], DEFAULT_SKILLS[0], DEFAULT_SKILLS[2]];
-    this.player.face(this.enemy.position.clone().sub(this.player.position));
-    this.enemy.face(this.player.position.clone().sub(this.enemy.position));
-    this.followCamera.groundForward.copy(this.enemy.position).sub(this.player.position).projectOnPlane(this.player.up).normalize();
+    this.player.face(spawn.enemy.clone().sub(this.player.position));
+    if (this.enemy) this.enemy.face(this.player.position.clone().sub(this.enemy.position));
+    this.followCamera.groundForward.copy(spawn.enemy).sub(this.player.position).projectOnPlane(this.player.up).normalize();
     this.followCamera.position.copy(this.player.position).addScaledVector(this.player.up, 4).addScaledVector(this.followCamera.groundForward, -9);
     this.followCamera.lookAt.copy(this.player.position).addScaledVector(this.player.up, 1.5);
-    this.matchTime = 180; this.matchElapsed = 0; this.resultPending = 0; this.matchOutcome = null; this.hitStop = 0; this.locked = true;
+    this.matchTime = 180; this.matchElapsed = 0; this.resultPending = 0; this.matchOutcome = null; this.hitStop = 0; this.locked = mode === 'duel';
+    this.world.setCreaturesVisible(mode === 'explore');
+    this.uiRoot.classList.toggle('exploring', mode === 'explore');
     this.state = 'playing'; this.input.enabled = true; this.input.reset();
-    this.menu.hideAll(); this.menu.settings.classList.add('hidden');
-    this.hud.setSkills(this.skills); this.hud.show(); this.hud.message('DUEL BEGIN', 'good');
+    this.menu.hideAll(); this.menu.settings.classList.add('hidden'); this.menu.help.classList.add('hidden');
+    this.hud.setSkills(this.skills);
+    if (mode === 'duel') { this.exploreHud.classList.add('hidden'); this.hud.show(); this.hud.message('DUEL BEGIN', 'good'); }
+    else { this.hud.hide(); this.exploreHud.classList.remove('hidden'); }
     this.mobileControls.show();
-    this.audio.playMusic('combat');
+    this.audio.playMusic(mode === 'duel' ? 'combat' : 'exploration');
     this.clock.getDelta();
   }
 
@@ -144,6 +157,7 @@ export class Game {
   }
 
   useSkill(caster, slot) {
+    if (this.mode === 'explore') return;
     const enemyCaster = caster === this.enemy;
     const skill = (enemyCaster ? this.enemySkills : this.skills)[slot];
     if (!skill) return;
@@ -180,7 +194,7 @@ export class Game {
     if (this.input.consume('KeyR')) this.useSkill(this.player, 1);
     if (this.input.consume('KeyF')) this.useSkill(this.player, 2);
     if (this.input.consume('Tab')) { this.locked = !this.locked; this.hud.message(this.locked ? 'TARGET LOCKED' : 'FREE CAMERA'); }
-    if (this.locked && this.enemy.alive && move.lengthSq() < 0.01) this.player.face(this.enemy.position.clone().sub(this.player.position), dt);
+    if (this.locked && this.enemy?.alive && move.lengthSq() < 0.01) this.player.face(this.enemy.position.clone().sub(this.player.position), dt);
     const movement = this.player.move(move, dt, this.input.down('ShiftLeft') || this.input.down('ShiftRight'));
     return movement;
   }
@@ -193,6 +207,16 @@ export class Game {
       return;
     }
     this.world.update(time, dt, this.player);
+    if (this.mode === 'explore') {
+      this.player.capturePreviousPosition();
+      const movement = this.updatePlayer(dt);
+      if (this.state !== 'playing') return;
+      this.player.update(dt, movement);
+      this.world.constrain(this.player);
+      this.effects.update(dt);
+      this.followCamera.update(dt, this.player, null, this.input, false);
+      return;
+    }
     this.matchTime = Math.max(0, this.matchTime - dt);
     this.matchElapsed += dt;
     this.player.capturePreviousPosition(); this.enemy.capturePreviousPosition();
@@ -250,7 +274,7 @@ export class Game {
   togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
   pause() { this.state = 'paused'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.menu.showPause(); }
   resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.mobileControls.show(); this.menu.hideAll(); this.clock.getDelta(); }
-  returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.hud.hide(); this.clearCharacters(); this.skillSystem?.clear?.(); this.effects?.clear?.(); this.audio.playMusic('menu'); this.menu.showMain(); }
+  returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.hud.hide(); this.exploreHud.classList.add('hidden'); this.uiRoot.classList.remove('exploring'); this.world.setCreaturesVisible(false); this.clearCharacters(); this.skillSystem?.clear?.(); this.effects?.clear?.(); this.audio.playMusic('menu'); this.menu.help.classList.add('hidden'); this.menu.showMain(); }
 
   setGraphics(preset) {
     const settings = { high: { scale: 1, shadows: true }, balanced: { scale: 0.8, shadows: true }, low: { scale: 0.65, shadows: false } }[preset] || { scale: 0.8, shadows: true };
@@ -268,9 +292,16 @@ export class Game {
   }
 
   resize() {
-    this.camera.aspect = innerWidth / innerHeight; this.camera.updateProjectionMatrix();
+    const viewport = window.visualViewport;
+    const width = Math.round(viewport?.width || innerWidth);
+    const height = Math.round(viewport?.height || innerHeight);
+    document.documentElement.style.setProperty('--app-width', `${width}px`);
+    document.documentElement.style.setProperty('--app-height', `${height}px`);
+    document.documentElement.style.setProperty('--app-left', `${viewport?.offsetLeft || 0}px`);
+    document.documentElement.style.setProperty('--app-top', `${viewport?.offsetTop || 0}px`);
+    this.camera.aspect = width / Math.max(1, height); this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(Math.min(devicePixelRatio * this.renderScale, 1.75));
-    this.renderer.setSize(innerWidth, innerHeight);
+    this.renderer.setSize(width, height);
   }
 
   animate = () => {

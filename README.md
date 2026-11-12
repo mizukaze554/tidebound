@@ -2,6 +2,10 @@
 
 TIDEBOUND is a playable third-person 3D combat prototype built with Three.js, Anime.js, vanilla JavaScript, and Vite. Every character, weapon, arena prop, and combat effect is generated from primitive geometry at runtime.
 
+## Explore or duel
+
+Choose **Peaceful Explore** on the title screen to walk the globe without a timer or hostile AI. Roaming creatures are friendly scenery. Choose **Enter the Duel** for the original timed fight. **How to Play** is available from the title screen, pause menu, and exploration HUD. Music begins after the first tap or key press; its volume can be changed in Settings.
+
 ## v1.3 — The Living Duel
 
 - Draws have their own result flow and optional music track.
@@ -15,7 +19,7 @@ TIDEBOUND is a playable third-person 3D combat prototype built with Three.js, An
 
 ## Seamless generated planet
 
-The combat world is a spherical, boundary-free planet with a declared surface area of **9.6 million km²**, approximately the area of China. Rendering uses a compact scale for browser-safe floating-point physics while `kmPerUnit` preserves the authored geographic scale.
+The world is a spherical, boundary-free planet with an Earth-sized declared surface area of **510.1 million km²**. Rendering uses compact engine units for stable browser physics while `kmPerUnit` maps those units onto the authored geographic scale. Taller terrain and trees, a wider clear-weather view, and streamed roaming creatures make nearby travel feel more expansive.
 
 - Terrain is split into deterministic latitude/longitude chunks around the player.
 - A stable coordinate hash controls height, biome, vegetation, crystals, and rare ruins.
@@ -111,7 +115,7 @@ Future server-authoritative boundaries are documented in [MULTIPLAYER.md](./MULT
 
 ## PWA updates
 
-Deploying v1.3 installs a new `tidebound-v1.3.0` application cache. Existing v1.2 caches are removed only after the new worker activates. When an update finishes downloading, use the in-game **UPDATE** notification; the page reloads after activation. Saved skills and audio/settings preferences remain in localStorage and require no migration step.
+Deploying v1.4 installs a new `tidebound-v1.4.0` application cache with the music loops. Earlier caches are removed after the new worker activates. When an update finishes downloading, use the in-game **UPDATE** notification; the page reloads after activation. Saved skills and audio/settings preferences remain in localStorage and require no migration step.
 
 The main loop clamps frame delta to 50 ms, gameplay uses delta-time movement, temporary Three.js resources are disposed on expiry, particles/effects are capped by short lifetimes, and gameplay pauses when the window loses focus.
 
