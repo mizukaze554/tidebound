@@ -1,0 +1,210 @@
+import * as THREE from 'three';
+import { Input } from './Input.js';
+import { ThirdPersonCamera } from './Camera.js';
+import { PlanetWorld } from '../world/PlanetWorld.js';
+import { Character } from '../entities/Character.js';
+import { EnemyAI } from '../entities/EnemyAI.js';
+import { CombatSystem } from '../combat/CombatSystem.js';
+import { SkillSystem } from '../combat/SkillSystem.js';
+import { Effects } from '../effects/Effects.js';
+import { HUD } from '../ui/HUD.js';
+import { Menu } from '../ui/Menu.js';
+import { SkillEditor } from '../ui/SkillEditor.js';
+import { SkillStorage, DEFAULT_SKILLS } from '../data/SkillStorage.js';
+
+export class Game {
+  constructor(container, uiRoot) {
+    this.container = container; this.uiRoot = uiRoot;
+    this.state = 'menu'; this.difficulty = 'normal'; this.renderScale = 1;
+    this.locked = true; this.matchTime = 180; this.resultPending = 0; this.gender = 'male';
+    this.clock = new THREE.Clock();
+  }
+
+  init() {
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 2200);
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    this.renderer.setSize(innerWidth, innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.12;
+    this.container.append(this.renderer.domElement);
+
+    this.world = new PlanetWorld(this.scene);
+    this.input = new Input(this.renderer.domElement);
+    this.followCamera = new ThirdPersonCamera(this.camera);
+    this.effects = new Effects(this.scene, this.camera, this.uiRoot);
+    this.storage = new SkillStorage();
+    this.skills = this.storage.loadEquipped(this.storage.load());
+    this.hud = new HUD(this.uiRoot);
+    this.skillEditor = new SkillEditor(this.uiRoot, this.storage, () => {}, (skill, slot) => this.equipSkill(skill, slot));
+    // Combat services must exist before menu callbacks can start a match. This
+    // also prevents stale Vite HMR instances from reaching an uninitialized
+    // skill runtime during character selection.
+    this.skillSystem = new SkillSystem(this.scene, this.effects, (target, result) => this.onDamage(target, result));
+    this.combat = new CombatSystem(this.effects, (target, result) => this.onDamage(target, result));
+    this.menu = new Menu(this.uiRoot, {
+      start: (gender) => this.start(gender),
+      skills: () => this.skillEditor.open(),
+      resume: () => this.resume(),
+      restart: () => this.start(this.gender),
+      main: () => this.returnToMenu(),
+      difficulty: (value) => { this.difficulty = value; this.ai?.setDifficulty(value); },
+      scale: (value) => { this.renderScale = value; this.resize(); },
+    });
+    this.menu.showMain();
+    this.hud.setSkills(this.skills);
+
+    window.addEventListener('resize', () => this.resize());
+    window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && !e.repeat) this.togglePause(); });
+    window.addEventListener('blur', () => { if (this.state === 'playing') this.pause(); });
+    this.animate();
+  }
+
+  start(gender = this.gender) {
+    this.gender = gender;
+    this.clearCharacters();
+    this.effects?.clear?.();
+    this.skillSystem?.clear?.();
+    const spawn = this.world.spawnPositions();
+    this.player = new Character(this.scene, { color: 0x267bb4, accent: 0x5ee3ff, name: 'Wayfarer', position: spawn.player, gender });
+    this.enemy = new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true });
+    this.world.updateUp(this.player); this.world.updateUp(this.enemy);
+    this.ai = new EnemyAI(this.enemy, this.player, this, this.difficulty);
+    this.enemySkills = [DEFAULT_SKILLS[1], DEFAULT_SKILLS[0], DEFAULT_SKILLS[2]];
+    this.player.face(this.enemy.position.clone().sub(this.player.position));
+    this.enemy.face(this.player.position.clone().sub(this.enemy.position));
+    this.followCamera.groundForward.copy(this.enemy.position).sub(this.player.position).projectOnPlane(this.player.up).normalize();
+    this.followCamera.position.copy(this.player.position).addScaledVector(this.player.up, 4).addScaledVector(this.followCamera.groundForward, -9);
+    this.followCamera.lookAt.copy(this.player.position).addScaledVector(this.player.up, 1.5);
+    this.matchTime = 180; this.resultPending = 0; this.locked = true;
+    this.state = 'playing'; this.input.enabled = true; this.input.reset();
+    this.menu.hideAll(); this.menu.settings.classList.add('hidden');
+    this.hud.setSkills(this.skills); this.hud.show(); this.hud.message('DUEL BEGIN', 'good');
+    this.clock.getDelta();
+  }
+
+  clearCharacters() {
+    for (const character of [this.player, this.enemy]) {
+      if (!character) continue;
+      this.scene.remove(character.group);
+      character.group.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+    }
+    this.player = this.enemy = null;
+  }
+
+  equipSkill(skill, slot) {
+    this.skills[slot] = skill;
+    this.storage.saveEquipped(this.skills);
+    this.hud.setSkills(this.skills);
+  }
+
+  useSkill(caster, slot) {
+    const enemyCaster = caster === this.enemy;
+    const skill = (enemyCaster ? this.enemySkills : this.skills)[slot];
+    if (!skill) return;
+    const result = this.skillSystem.activate(caster, enemyCaster ? this.player : this.enemy, skill, slot);
+    if (!enemyCaster) this.hud.message(result.ok ? skill.name.toUpperCase() : result.error, result.ok ? 'good' : 'bad');
+  }
+
+  onDamage(target) {
+    const flash = target === this.player ? document.body : this.hud.el;
+    flash.classList.remove('hit-flash'); void flash.offsetWidth; flash.classList.add('hit-flash');
+    if (!target.alive && !this.resultPending) this.resultPending = 1.8;
+  }
+
+  updatePlayer(dt) {
+    let move = new THREE.Vector3();
+    if (this.input.down('KeyW')) move.add(this.followCamera.forward());
+    if (this.input.down('KeyS')) move.sub(this.followCamera.forward());
+    if (this.input.down('KeyD')) move.add(this.followCamera.right());
+    if (this.input.down('KeyA')) move.sub(this.followCamera.right());
+    if (this.input.consume('Space')) this.player.jump();
+    if (this.input.consume('KeyQ')) this.player.dodge(move);
+    if (this.input.consume('Mouse0')) this.player.startAttack();
+    this.player.setBlock(this.input.button(2));
+    if (this.input.consume('KeyE')) this.useSkill(this.player, 0);
+    if (this.input.consume('KeyR')) this.useSkill(this.player, 1);
+    if (this.input.consume('KeyF')) this.useSkill(this.player, 2);
+    if (this.input.consume('Tab')) { this.locked = !this.locked; this.hud.message(this.locked ? 'TARGET LOCKED' : 'FREE CAMERA'); }
+    if (this.locked && this.enemy.alive && move.lengthSq() < 0.01) this.player.face(this.enemy.position.clone().sub(this.player.position), dt);
+    const movement = this.player.move(move, dt, this.input.down('ShiftLeft') || this.input.down('ShiftRight'));
+    return movement;
+  }
+
+  update(dt, time) {
+    if (this.state !== 'playing' || !this.player) return;
+    this.world.update(time, dt, this.player);
+    this.matchTime = Math.max(0, this.matchTime - dt);
+    const playerMovement = this.updatePlayer(dt);
+    const enemyMovement = this.ai.update(dt);
+    this.player.update(dt, playerMovement);
+    this.enemy.update(dt, enemyMovement);
+    this.world.constrain(this.player); this.world.constrain(this.enemy);
+    this.combat.update(this.player, this.enemy);
+    this.combat.update(this.enemy, this.player);
+    this.skillSystem.update(dt);
+    this.effects.update(dt);
+    this.separateCharacters();
+    this.followCamera.update(dt, this.player, this.enemy, this.input, this.locked);
+    this.hud.update(this.player, this.enemy, this.ai.state, this.skills, dt, this.locked, this.matchTime, this.world);
+
+    if (this.matchTime <= 0 && !this.resultPending) {
+      if (this.player.health === this.enemy.health) this.enemy.health = 0;
+      else (this.player.health > this.enemy.health ? this.enemy : this.player).health = 0;
+      this.resultPending = 1.2;
+    }
+    if (this.resultPending > 0) {
+      this.resultPending -= dt;
+      if (this.resultPending <= 0) this.endMatch(this.player.alive && this.player.health > 0);
+    }
+  }
+
+  separateCharacters() {
+    if (!this.player.alive || !this.enemy.alive) return;
+    const offset = this.enemy.position.clone().sub(this.player.position).projectOnPlane(this.player.up);
+    const minimum = this.player.radius + this.enemy.radius;
+    const distance = offset.length();
+    if (distance > 0.001 && distance < minimum) {
+      const correction = offset.normalize().multiplyScalar((minimum - distance) * 0.5);
+      this.player.position.addScaledVector(correction, -1);
+      this.enemy.position.add(correction);
+    }
+  }
+
+  endMatch(victory) {
+    this.state = 'result'; this.input.enabled = false;
+    document.exitPointerLock?.(); this.hud.hide();
+    this.menu.showResult(victory, this.player.stats);
+  }
+
+  togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
+  pause() { this.state = 'paused'; this.input.enabled = false; document.exitPointerLock?.(); this.menu.showPause(); }
+  resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.menu.hideAll(); this.clock.getDelta(); }
+  returnToMenu() { this.state = 'menu'; this.input.enabled = false; document.exitPointerLock?.(); this.hud.hide(); this.clearCharacters(); this.skillSystem?.clear?.(); this.effects?.clear?.(); this.menu.showMain(); }
+
+  resize() {
+    this.camera.aspect = innerWidth / innerHeight; this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio * this.renderScale, 1.75));
+    this.renderer.setSize(innerWidth, innerHeight);
+  }
+
+  animate = () => {
+    requestAnimationFrame(this.animate);
+    const dt = Math.min(this.clock.getDelta(), 0.05);
+    this.update(dt, performance.now() / 1000);
+    if (this.state === 'menu' && !this.player) {
+      const target = this.world.surfacePoint(this.world.spawnLat, this.world.spawnLon, 2);
+      const up = target.clone().normalize();
+      const east = new THREE.Vector3(-Math.sin(this.world.spawnLon), 0, Math.cos(this.world.spawnLon));
+      const drift = Math.sin(performance.now() * 0.00015) * 12;
+      this.camera.position.copy(target).addScaledVector(up, 34).addScaledVector(east, 48 + drift);
+      this.camera.up.copy(up); this.camera.lookAt(target);
+    }
+    this.renderer.render(this.scene, this.camera);
+    this.input.endFrame();
+  };
+}
