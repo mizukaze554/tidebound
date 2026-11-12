@@ -104,7 +104,7 @@ export class Game {
     }
     this.exploreHud = document.createElement('section');
     this.exploreHud.className = 'explore-hud hidden';
-    this.exploreHud.innerHTML = '<b>THE LIVING WORLD</b><span data-vitals>100 HP · 70 EN</span><span class="explore-hint">Gather · build · discover · watch for wildlings</span><button type="button" data-gather>GATHER</button><button type="button" data-journal>JOURNAL</button><button type="button" data-help>?</button><button type="button" data-pause>Ⅱ</button>';
+    this.exploreHud.innerHTML = '<b>THE LIVING WORLD</b><span data-vitals>100 HP · 70 MP</span><span class="explore-hint">Gather · build · discover · watch for wildlings</span><button type="button" data-gather>GATHER</button><button type="button" data-journal>JOURNAL</button><button type="button" data-help>?</button><button type="button" data-pause>Ⅱ</button>';
     this.exploreHud.querySelector('[data-gather]').onclick = () => this.gather();
     this.exploreHud.querySelector('[data-journal]').onclick = () => this.openJournal();
     this.exploreHud.querySelector('[data-help]').onclick = () => { this.pause(); this.menu.showHelp(); };
@@ -322,7 +322,7 @@ export class Game {
       this.catalogCombat.update(dt);
       this.updateMonsters(dt);
       this.hud.update(this.player, null, '', this.skills, dt, false, 0, this.world, this.renderer, this.effects);
-      this.exploreHud.querySelector('[data-vitals]').textContent = `${Math.ceil(this.player.health)} HP · ${Math.ceil(this.player.energy)} EN`;
+      this.exploreHud.querySelector('[data-vitals]').textContent = `${Math.ceil(this.player.health)} HP · ${Math.ceil(this.player.energy)} MP`;
       this.worldSlice.updatePreview(this.player, this.followCamera.forward());
       this.effects.update(dt);
       this.followCamera.update(dt, this.player, null, this.input, false);
