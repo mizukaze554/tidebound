@@ -14,3 +14,17 @@ test('production PWA precaches hashed application assets and supports controlled
   assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ['192x192', '512x512']);
   await stat(new URL('../dist/assets/tidebound-icon-512.png', import.meta.url));
 });
+
+test('mobile build disables page zoom and includes short-landscape menu sizing', async () => {
+  const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+  assert.match(html, /maximum-scale=1/);
+  assert.match(html, /user-scalable=no/);
+  assert.match(html, /viewport-fit=cover/);
+
+  const assetNames = [...html.matchAll(/href="([^"]+\.css)"/g)].map((match) => match[1]);
+  assert.equal(assetNames.length, 1);
+  const css = await readFile(new URL(assetNames[0], new URL('../dist/', import.meta.url)), 'utf8');
+  assert.match(css, /pointer:coarse/);
+  assert.match(css, /height(?:<=|:)430px/);
+  assert.match(css, /100dvh/);
+});

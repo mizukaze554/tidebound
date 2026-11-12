@@ -12,8 +12,9 @@
 }
 
 * { box-sizing: border-box; }
-html, body, #game, #ui-root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-body { background: #07151f; color: var(--ink); user-select: none; overscroll-behavior: none; }
+html, body, #game, #ui-root { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; }
+html, body { touch-action: manipulation; }
+body { background: #07151f; color: var(--ink); user-select: none; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
 button, input, select { font: inherit; }
 button { color: inherit; }
 canvas { display: block; width: 100%; height: 100%; }
@@ -265,6 +266,35 @@ input[type=range] { width: 100%; accent-color: var(--cyan); }
 .orientation-guard, .mobile-controls { display: none; }
 
 @media (pointer: coarse) and (orientation: landscape) {
+  /* A rotated phone has desktop-like width but very little height. Keep both
+     pre-game actions inside the visual viewport instead of clipping them. */
+  .main-menu, .character-select { min-height: 100dvh; }
+  .main-menu { overflow-y: auto; padding: max(10px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+  .main-menu::before { inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .brand-block { position: relative; left: auto; top: auto; width: min(660px, 88vw); min-height: calc(100dvh - max(20px, env(safe-area-inset-top)) - max(20px, env(safe-area-inset-bottom))); margin: 0; display: flex; flex-direction: column; justify-content: center; transform: none; }
+  .brand-icon { width: 36px; height: 36px; border-radius: 9px; }
+  .brand-block h1 { margin-top: 3px; font-size: clamp(42px, 12vh, 68px); line-height: .88; }
+  .brand-block p { margin: 8px 0 10px; font-size: 11px; line-height: 1.35; }
+  .menu-actions { width: min(600px, 82vw); grid-template-columns: 1fr 1fr; gap: 6px; }
+  .menu-actions button { min-height: 42px; padding: 9px 15px; font-size: 11px; }
+  .menu-footer { display: none; }
+
+  .character-select { place-content: center; overflow-y: auto; padding: max(8px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+  .screen-heading { margin-bottom: 8px; }
+  .screen-heading h2 { margin: 3px 0; font-size: clamp(20px, 7vh, 30px); }
+  .screen-heading p { margin: 0; font-size: 10px; }
+  .character-cards { gap: 10px; }
+  .character-cards > button { width: min(220px, 32vw); padding: 8px 12px; }
+  .avatar { height: clamp(72px, 25vh, 115px); margin-bottom: 5px; }
+  .avatar i { top: 3%; width: clamp(26px, 8vh, 40px); height: clamp(26px, 8vh, 40px); }
+  .avatar b { top: 30%; width: clamp(45px, 12vh, 65px); height: clamp(38px, 13vh, 62px); }
+  .avatar span { top: 68%; width: clamp(38px, 10vh, 54px); height: clamp(25px, 9vh, 42px); }
+  .avatar.female b { width: clamp(39px, 10vh, 56px); }
+  .character-cards strong { font-size: 10px; }
+  .character-cards small { margin-top: 2px; font-size: 7px; }
+  .character-confirm { width: min(360px, 60vw); min-height: 40px; margin-top: 8px; padding: 9px 16px; font-size: 10px; }
+  .character-select .back { min-height: 30px; margin-top: 1px; padding: 5px 8px; font-size: 9px; }
+
   .mobile-controls:not(.hidden) { display: block; position: fixed; inset: 0; z-index: 7; pointer-events: none; touch-action: none; }
   .mobile-look { position: absolute; inset: 14% 0 0 45%; pointer-events: auto; }
   .mobile-stick { position: absolute; left: max(5vw, calc(14px + env(safe-area-inset-left))); bottom: max(7vh, calc(12px + env(safe-area-inset-bottom))); width: 124px; height: 124px; border: 1px solid rgba(190,240,255,.38); border-radius: 50%; background: rgba(7,25,34,.35); pointer-events: auto; backdrop-filter: blur(3px); touch-action: none; }
@@ -283,6 +313,10 @@ input[type=range] { width: 100%; accent-color: var(--cyan); }
 }
 
 @media (pointer: coarse) and (max-height: 430px) and (orientation: landscape) {
+  .brand-block p { display: none; }
+  .brand-block h1 { font-size: clamp(38px, 15vh, 58px); }
+  .menu-actions { margin-top: 8px; }
+  .screen-heading p { display: none; }
   .top-hud { top: max(7px, env(safe-area-inset-top)); }
   .mobile-stick { width: 104px; height: 104px; }
   .mobile-actions { transform: scale(.88); transform-origin: right bottom; }
