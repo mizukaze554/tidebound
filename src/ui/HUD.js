@@ -45,10 +45,10 @@ export class HUD {
       slot.className = `skill-slot ${skill ? `element-${skill.element.toLowerCase()}` : 'empty'}`;
       slot.dataset.slot = String(index);
       const key = document.createElement('kbd'); key.textContent = ['E', 'R', 'F'][index];
-      const glyph = document.createElement('i'); glyph.className = 'skill-glyph'; glyph.textContent = skill ? `${skill.element[0]}${skill.effect[0]}` : '—';
+      const glyph = document.createElement('i'); glyph.className = 'skill-glyph'; glyph.textContent = skill ? `${skill.element[0].toUpperCase()}${(skill.family || skill.effect)[0].toUpperCase()}` : '—';
       const copy = document.createElement('div');
       const name = document.createElement('b'); name.textContent = skill?.name || 'Empty slot';
-      const detail = document.createElement('small'); detail.textContent = skill ? `${skill.element} · ${skill.shape}` : 'Equip in Skill Creator';
+      const detail = document.createElement('small'); detail.textContent = skill ? `${skill.element} · ${skill.family || skill.shape}` : 'Equip in Journal';
       copy.append(name, detail);
       const cooldown = document.createElement('span'); cooldown.className = 'cooldown';
       const cooldownText = document.createElement('em'); cooldownText.className = 'cooldown-text';
@@ -80,7 +80,7 @@ export class HUD {
     const min = Math.floor(timeLeft / 60), sec = Math.floor(timeLeft % 60);
     this.refs.timer.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     [...this.refs.skills.children].forEach((slot, i) => {
-      const total = skills[i] ? 2.2 + skills[i].power * 0.18 + skills[i].duration * 0.2 + (skills[i].shape === 'Area' ? 0.8 : 0) : 1;
+      const total = skills[i]?.combat?.cooldownSec || (skills[i] ? 2.2 + skills[i].power * 0.18 + skills[i].duration * 0.2 + (skills[i].shape === 'Area' ? 0.8 : 0) : 1);
       const remaining = player.cooldowns[i];
       slot.querySelector('.cooldown').style.setProperty('--cooldown', `${remaining / total * 100}%`);
       slot.querySelector('.cooldown-text').textContent = remaining > 0 ? remaining.toFixed(1) : '';

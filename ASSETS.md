@@ -2,6 +2,8 @@
 
 TIDEBOUND bundles original generated music loops and procedural character fallbacks. No third-party character models or sound-effect packs are included.
 
+The World Discovery Kit contributes JSON specifications and a basic Three.js geometry factory. These are placeholder procedural shapes, not 1,000 finished GLB models, textures, or licensed third-party art.
+
 ## Bundled artwork
 
 - `artwork/tidebound-icon-source.png` — high-resolution source emblem derived from title artwork supplied by the project owner. It sits outside `public/` so it is not copied into production builds.

@@ -17,8 +17,8 @@ export class PlanetWorld {
     this.chunks = new Map();
     this.streamTimer = 0;
     this.weatherClock = 0;
-    this.spawnLat = 0.36;
-    this.spawnLon = 0.2;
+    this.spawnLat = 0.35;
+    this.spawnLon = 0.6;
     this.weather = 'CLEAR';
     this.weatherParticles = null;
     this.weatherPositions = null;
@@ -146,13 +146,15 @@ export class PlanetWorld {
     const moisture = Math.sin(lon * 5 - lat * 7.9) * 0.5 + 0.5;
     if (Math.abs(lat) > 1.05) return 'tundra';
     if (height > 6) return 'highland';
+    if (height < 2.3 && Math.abs(lat) < 0.85) return 'coast';
+    if (moisture > 0.82) return 'wetland';
     if (moisture < 0.25) return 'steppe';
     if (moisture > 0.72) return 'forest';
     return 'grassland';
   }
 
   colorFor(biome, height) {
-    const colors = { tundra: 0x9baead, highland: 0x68706a, steppe: 0x8a8153, forest: 0x245746, grassland: 0x3f7359 };
+    const colors = { tundra: 0x9baead, highland: 0x68706a, steppe: 0x8a8153, coast: 0xb9aa79, wetland: 0x3f7975, forest: 0x245746, grassland: 0x3f7359 };
     return new THREE.Color(colors[biome]).offsetHSL(0, 0, THREE.MathUtils.clamp((height - 1.5) * 0.025, -0.04, 0.08));
   }
 
@@ -259,6 +261,7 @@ export class PlanetWorld {
     this.generateGrass(group, latIndex, lonIndex, lat0, lon0);
     this.generateLandmarks(group, latIndex, lonIndex, lat0, lon0);
     this.generateCreature(group, latIndex, lonIndex, lat0, lon0);
+    this.worldSlice?.attachChunk(key, group, latIndex, lonIndex, lat0, lon0);
     this.scene.add(group);
     this.chunks.set(key, group);
   }
@@ -362,9 +365,11 @@ export class PlanetWorld {
 
   removeChunk(key, chunk) {
     this.scene.remove(chunk);
+    this.worldSlice?.detachChunk(chunk);
     const geometries = new Set(); const materials = new Set();
     chunk.traverse((object) => {
       if (!object.isMesh) return;
+      if (object.userData.sharedResource) return;
       geometries.add(object.geometry);
       (Array.isArray(object.material) ? object.material : [object.material]).filter(Boolean).forEach((material) => materials.add(material));
     });
@@ -438,6 +443,7 @@ export class PlanetWorld {
       creature.position.set(Math.sin(phase) * 1.8, Math.sin(phase * 2) * 0.12, Math.cos(phase) * 1.8);
       creature.rotation.y = -phase;
     }
+    this.worldSlice?.update(player.position);
     const cycle = ['CLEAR', 'RAIN', 'FOG', 'STORM', 'SNOW'];
     const next = cycle[Math.floor(this.weatherClock / 40) % cycle.length];
     if (next !== this.weather) this.setWeather(next, player);

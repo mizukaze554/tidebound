@@ -1,0 +1,111 @@
+[
+  {
+    "id": "grassland",
+    "name": "Grassland",
+    "spawnCategories": [
+      "ground_cover",
+      "flowers",
+      "shrubs",
+      "trees",
+      "rocks",
+      "weather_fx",
+      "roads_paths"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "forest",
+    "name": "Forest",
+    "spawnCategories": [
+      "ground_cover",
+      "flowers",
+      "shrubs",
+      "trees",
+      "fungi",
+      "water_features",
+      "weather_fx",
+      "roads_paths",
+      "landmarks_ruins"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "wetland",
+    "name": "Wetland",
+    "spawnCategories": [
+      "ground_cover",
+      "trees",
+      "fungi",
+      "water_features"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "mountain",
+    "name": "Mountain",
+    "spawnCategories": [
+      "rocks",
+      "ores",
+      "cliffs",
+      "mountains",
+      "caves",
+      "weather_fx",
+      "roads_paths",
+      "landmarks_ruins"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "alpine",
+    "name": "Alpine",
+    "spawnCategories": [
+      "flowers",
+      "mountains"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "coast",
+    "name": "Coast",
+    "spawnCategories": [
+      "rocks",
+      "cliffs",
+      "water_features",
+      "coast_features",
+      "weather_fx"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "desert",
+    "name": "Desert",
+    "spawnCategories": [
+      "shrubs",
+      "rocks"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "cave",
+    "name": "Cave",
+    "spawnCategories": [
+      "fungi",
+      "ores",
+      "caves"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  },
+  {
+    "id": "settlement",
+    "name": "Settlement",
+    "spawnCategories": [
+      "building_parts",
+      "houses",
+      "fortifications",
+      "landmarks_ruins",
+      "infrastructure",
+      "decoration_props"
+    ],
+    "generationNotes": "Use terrain slope, altitude, moisture, and world seed; enforce minimum spacing and a per-chunk budget."
+  }
+]

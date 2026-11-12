@@ -1,7 +1,7 @@
 {
-  "name": "TIDEBOUND v1.4 — The Living World",
+  "name": "TIDEBOUND v1.5 — World Discoveries",
   "short_name": "TIDEBOUND",
-  "description": "A living procedural world of third-person elemental duels and player-forged techniques.",
+  "description": "Explore a living planet, discover skills, gather resources, and build.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

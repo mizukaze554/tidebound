@@ -1,0 +1,62 @@
+[
+  {
+    "id": "wood",
+    "name": "Wood",
+    "stackLimit": 9999
+  },
+  {
+    "id": "stone",
+    "name": "Stone",
+    "stackLimit": 9999
+  },
+  {
+    "id": "fiber",
+    "name": "Fiber",
+    "stackLimit": 9999
+  },
+  {
+    "id": "clay",
+    "name": "Clay",
+    "stackLimit": 9999
+  },
+  {
+    "id": "sand",
+    "name": "Sand",
+    "stackLimit": 9999
+  },
+  {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "stackLimit": 9999
+  },
+  {
+    "id": "copper_ore",
+    "name": "Copper Ore",
+    "stackLimit": 9999
+  },
+  {
+    "id": "crystal",
+    "name": "Crystal",
+    "stackLimit": 9999
+  },
+  {
+    "id": "water",
+    "name": "Water",
+    "stackLimit": 9999
+  },
+  {
+    "id": "resin",
+    "name": "Resin",
+    "stackLimit": 9999
+  },
+  {
+    "id": "coal",
+    "name": "Coal",
+    "stackLimit": 9999
+  },
+  {
+    "id": "cloth",
+    "name": "Cloth",
+    "stackLimit": 9999
+  }
+]

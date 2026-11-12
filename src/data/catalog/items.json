@@ -1,0 +1,2442 @@
+[
+  {
+    "id": "it_w_01_01",
+    "name": "Driftwood Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "common",
+    "description": "A dagger fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 7.0,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 60,
+      "weightKg": 0.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_01_02",
+    "name": "Copper Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "common",
+    "description": "A dagger fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 8.4,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 95,
+      "weightKg": 0.96
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_01_03",
+    "name": "Iron Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "uncommon",
+    "description": "A dagger fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 10.5,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 130,
+      "weightKg": 1.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_01_04",
+    "name": "Moonsteel Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "rare",
+    "description": "A dagger fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 14.0,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 165,
+      "weightKg": 1.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_01_05",
+    "name": "Starforged Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "epic",
+    "description": "A dagger fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 19.6,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 200,
+      "weightKg": 2.24
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_01_06",
+    "name": "Relic Dagger",
+    "type": "weapon",
+    "subtype": "dagger",
+    "rarity": "legendary",
+    "description": "A dagger fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 28.0,
+      "defense": 0,
+      "reachM": 1.4,
+      "durability": 235,
+      "weightKg": 3.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_dagger",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_01",
+    "name": "Driftwood Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "common",
+    "description": "A sword fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 11.0,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 60,
+      "weightKg": 1.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_02",
+    "name": "Copper Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "common",
+    "description": "A sword fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 13.2,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 95,
+      "weightKg": 1.44
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_03",
+    "name": "Iron Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "uncommon",
+    "description": "A sword fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 16.5,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 130,
+      "weightKg": 1.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_04",
+    "name": "Moonsteel Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "rare",
+    "description": "A sword fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 22.0,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 165,
+      "weightKg": 2.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_05",
+    "name": "Starforged Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "epic",
+    "description": "A sword fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 30.8,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 200,
+      "weightKg": 3.36
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_02_06",
+    "name": "Relic Sword",
+    "type": "weapon",
+    "subtype": "sword",
+    "rarity": "legendary",
+    "description": "A sword fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 44.0,
+      "defense": 0,
+      "reachM": 1.9,
+      "durability": 235,
+      "weightKg": 4.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_sword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_01",
+    "name": "Driftwood Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "common",
+    "description": "A greatsword fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 17.0,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 60,
+      "weightKg": 1.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_02",
+    "name": "Copper Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "common",
+    "description": "A greatsword fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 20.4,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 95,
+      "weightKg": 1.92
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_03",
+    "name": "Iron Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "uncommon",
+    "description": "A greatsword fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 25.5,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 130,
+      "weightKg": 2.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_04",
+    "name": "Moonsteel Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "rare",
+    "description": "A greatsword fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 34.0,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 165,
+      "weightKg": 3.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_05",
+    "name": "Starforged Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "epic",
+    "description": "A greatsword fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 47.6,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 200,
+      "weightKg": 4.48
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_03_06",
+    "name": "Relic Greatsword",
+    "type": "weapon",
+    "subtype": "greatsword",
+    "rarity": "legendary",
+    "description": "A greatsword fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 68.0,
+      "defense": 0,
+      "reachM": 2.3,
+      "durability": 235,
+      "weightKg": 6.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_greatsword",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_01",
+    "name": "Driftwood Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "common",
+    "description": "A spear fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 10.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 60,
+      "weightKg": 2.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_02",
+    "name": "Copper Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "common",
+    "description": "A spear fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 12.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 95,
+      "weightKg": 2.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_03",
+    "name": "Iron Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "uncommon",
+    "description": "A spear fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 15.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 130,
+      "weightKg": 3.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_04",
+    "name": "Moonsteel Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "rare",
+    "description": "A spear fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 20.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 165,
+      "weightKg": 4.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_05",
+    "name": "Starforged Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "epic",
+    "description": "A spear fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 28.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 200,
+      "weightKg": 5.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_04_06",
+    "name": "Relic Spear",
+    "type": "weapon",
+    "subtype": "spear",
+    "rarity": "legendary",
+    "description": "A spear fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 40.0,
+      "defense": 0,
+      "reachM": 3.0,
+      "durability": 235,
+      "weightKg": 8.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_spear",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_01",
+    "name": "Driftwood Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "common",
+    "description": "A bow fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 9.0,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 60,
+      "weightKg": 2.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_02",
+    "name": "Copper Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "common",
+    "description": "A bow fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 10.8,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 95,
+      "weightKg": 2.88
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_03",
+    "name": "Iron Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "uncommon",
+    "description": "A bow fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 13.5,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 130,
+      "weightKg": 3.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_04",
+    "name": "Moonsteel Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "rare",
+    "description": "A bow fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 18.0,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 165,
+      "weightKg": 4.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_05",
+    "name": "Starforged Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "epic",
+    "description": "A bow fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 25.2,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 200,
+      "weightKg": 6.72
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_05_06",
+    "name": "Relic Bow",
+    "type": "weapon",
+    "subtype": "bow",
+    "rarity": "legendary",
+    "description": "A bow fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 36.0,
+      "defense": 0,
+      "reachM": 16,
+      "durability": 235,
+      "weightKg": 9.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_bow",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_01",
+    "name": "Driftwood Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "common",
+    "description": "A staff fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 8.0,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 60,
+      "weightKg": 2.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_02",
+    "name": "Copper Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "common",
+    "description": "A staff fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 9.6,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 95,
+      "weightKg": 3.36
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_03",
+    "name": "Iron Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "uncommon",
+    "description": "A staff fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 12.0,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 130,
+      "weightKg": 4.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_04",
+    "name": "Moonsteel Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "rare",
+    "description": "A staff fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 16.0,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 165,
+      "weightKg": 5.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_05",
+    "name": "Starforged Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "epic",
+    "description": "A staff fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 22.4,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 200,
+      "weightKg": 7.84
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_06_06",
+    "name": "Relic Staff",
+    "type": "weapon",
+    "subtype": "staff",
+    "rarity": "legendary",
+    "description": "A staff fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 32.0,
+      "defense": 0,
+      "reachM": 2.0,
+      "durability": 235,
+      "weightKg": 11.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_staff",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_01",
+    "name": "Driftwood Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "common",
+    "description": "A hammer fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 18.0,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 60,
+      "weightKg": 3.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_02",
+    "name": "Copper Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "common",
+    "description": "A hammer fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 21.6,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 95,
+      "weightKg": 3.84
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_03",
+    "name": "Iron Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "uncommon",
+    "description": "A hammer fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 27.0,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 130,
+      "weightKg": 4.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_04",
+    "name": "Moonsteel Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "rare",
+    "description": "A hammer fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 36.0,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 165,
+      "weightKg": 6.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_05",
+    "name": "Starforged Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "epic",
+    "description": "A hammer fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 50.4,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 200,
+      "weightKg": 8.96
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_07_06",
+    "name": "Relic Hammer",
+    "type": "weapon",
+    "subtype": "hammer",
+    "rarity": "legendary",
+    "description": "A hammer fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 72.0,
+      "defense": 0,
+      "reachM": 2,
+      "durability": 235,
+      "weightKg": 12.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_hammer",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_01",
+    "name": "Driftwood Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "common",
+    "description": "A axe fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 14.0,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 60,
+      "weightKg": 3.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_02",
+    "name": "Copper Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "common",
+    "description": "A axe fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 16.8,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 95,
+      "weightKg": 4.32
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_03",
+    "name": "Iron Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "uncommon",
+    "description": "A axe fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 21.0,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 130,
+      "weightKg": 5.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_04",
+    "name": "Moonsteel Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "rare",
+    "description": "A axe fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 28.0,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 165,
+      "weightKg": 7.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_05",
+    "name": "Starforged Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "epic",
+    "description": "A axe fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 39.2,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 200,
+      "weightKg": 10.08
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_08_06",
+    "name": "Relic Axe",
+    "type": "weapon",
+    "subtype": "axe",
+    "rarity": "legendary",
+    "description": "A axe fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 56.0,
+      "defense": 0,
+      "reachM": 2.1,
+      "durability": 235,
+      "weightKg": 14.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_axe",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_01",
+    "name": "Driftwood Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "common",
+    "description": "A gauntlets fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 8.0,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 60,
+      "weightKg": 4.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_02",
+    "name": "Copper Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "common",
+    "description": "A gauntlets fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 9.6,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 95,
+      "weightKg": 4.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_03",
+    "name": "Iron Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "uncommon",
+    "description": "A gauntlets fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 12.0,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 130,
+      "weightKg": 6.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_04",
+    "name": "Moonsteel Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "rare",
+    "description": "A gauntlets fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 16.0,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 165,
+      "weightKg": 8.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_05",
+    "name": "Starforged Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "epic",
+    "description": "A gauntlets fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 22.4,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 200,
+      "weightKg": 11.2
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_09_06",
+    "name": "Relic Gauntlets",
+    "type": "weapon",
+    "subtype": "gauntlets",
+    "rarity": "legendary",
+    "description": "A gauntlets fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 32.0,
+      "defense": 0,
+      "reachM": 1.5,
+      "durability": 235,
+      "weightKg": 16.0
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_gauntlets",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_01",
+    "name": "Driftwood Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "common",
+    "description": "A wand fashioned from driftwood; usable by any character.",
+    "stats": {
+      "attack": 6.0,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 60,
+      "weightKg": 4.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 10,
+      "starterEligible": true
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_02",
+    "name": "Copper Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "common",
+    "description": "A wand fashioned from copper; usable by any character.",
+    "stats": {
+      "attack": 7.2,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 95,
+      "weightKg": 5.28
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_03",
+    "name": "Iron Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "uncommon",
+    "description": "A wand fashioned from iron; usable by any character.",
+    "stats": {
+      "attack": 9.0,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 130,
+      "weightKg": 6.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_04",
+    "name": "Moonsteel Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "rare",
+    "description": "A wand fashioned from moonsteel; usable by any character.",
+    "stats": {
+      "attack": 12.0,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 165,
+      "weightKg": 8.8
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_05",
+    "name": "Starforged Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "epic",
+    "description": "A wand fashioned from starforged; usable by any character.",
+    "stats": {
+      "attack": 16.8,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 200,
+      "weightKg": 12.32
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 2,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_w_10_06",
+    "name": "Relic Wand",
+    "type": "weapon",
+    "subtype": "wand",
+    "rarity": "legendary",
+    "description": "A wand fashioned from relic; usable by any character.",
+    "stats": {
+      "attack": 24.0,
+      "defense": 0,
+      "reachM": 12,
+      "durability": 235,
+      "weightKg": 17.6
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 1,
+      "starterEligible": false
+    },
+    "assetKey": "weapon_wand",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_01_01",
+    "name": "Woven Hood",
+    "type": "armor",
+    "subtype": "head",
+    "rarity": "common",
+    "description": "Head protection made from cloth.",
+    "stats": {
+      "attack": 0,
+      "defense": 3,
+      "durability": 60,
+      "weightKg": 0.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "armor_head_cloth",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_01_02",
+    "name": "Leather Hood",
+    "type": "armor",
+    "subtype": "head",
+    "rarity": "common",
+    "description": "Head protection made from leather.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "durability": 90,
+      "weightKg": 0.95
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 7,
+      "starterEligible": false
+    },
+    "assetKey": "armor_head_leather",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_01_03",
+    "name": "Chain Hood",
+    "type": "armor",
+    "subtype": "head",
+    "rarity": "uncommon",
+    "description": "Head protection made from chain.",
+    "stats": {
+      "attack": 0,
+      "defense": 8,
+      "durability": 120,
+      "weightKg": 1.5
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "armor_head_chain",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_01_04",
+    "name": "Runic Hood",
+    "type": "armor",
+    "subtype": "head",
+    "rarity": "rare",
+    "description": "Head protection made from rune.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "durability": 150,
+      "weightKg": 2.05
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 5,
+      "starterEligible": false
+    },
+    "assetKey": "armor_head_rune",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_02_01",
+    "name": "Woven Tunic",
+    "type": "armor",
+    "subtype": "chest",
+    "rarity": "common",
+    "description": "Chest protection made from cloth.",
+    "stats": {
+      "attack": 0,
+      "defense": 3,
+      "durability": 60,
+      "weightKg": 0.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "armor_chest_cloth",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_02_02",
+    "name": "Leather Tunic",
+    "type": "armor",
+    "subtype": "chest",
+    "rarity": "common",
+    "description": "Chest protection made from leather.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "durability": 90,
+      "weightKg": 0.95
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 7,
+      "starterEligible": false
+    },
+    "assetKey": "armor_chest_leather",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_02_03",
+    "name": "Chain Tunic",
+    "type": "armor",
+    "subtype": "chest",
+    "rarity": "uncommon",
+    "description": "Chest protection made from chain.",
+    "stats": {
+      "attack": 0,
+      "defense": 8,
+      "durability": 120,
+      "weightKg": 1.5
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "armor_chest_chain",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_02_04",
+    "name": "Runic Tunic",
+    "type": "armor",
+    "subtype": "chest",
+    "rarity": "rare",
+    "description": "Chest protection made from rune.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "durability": 150,
+      "weightKg": 2.05
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 5,
+      "starterEligible": false
+    },
+    "assetKey": "armor_chest_rune",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_03_01",
+    "name": "Woven Gloves",
+    "type": "armor",
+    "subtype": "hands",
+    "rarity": "common",
+    "description": "Hands protection made from cloth.",
+    "stats": {
+      "attack": 0,
+      "defense": 3,
+      "durability": 60,
+      "weightKg": 0.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "armor_hands_cloth",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_03_02",
+    "name": "Leather Gloves",
+    "type": "armor",
+    "subtype": "hands",
+    "rarity": "common",
+    "description": "Hands protection made from leather.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "durability": 90,
+      "weightKg": 0.95
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 7,
+      "starterEligible": false
+    },
+    "assetKey": "armor_hands_leather",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_03_03",
+    "name": "Chain Gloves",
+    "type": "armor",
+    "subtype": "hands",
+    "rarity": "uncommon",
+    "description": "Hands protection made from chain.",
+    "stats": {
+      "attack": 0,
+      "defense": 8,
+      "durability": 120,
+      "weightKg": 1.5
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "armor_hands_chain",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_03_04",
+    "name": "Runic Gloves",
+    "type": "armor",
+    "subtype": "hands",
+    "rarity": "rare",
+    "description": "Hands protection made from rune.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "durability": 150,
+      "weightKg": 2.05
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 5,
+      "starterEligible": false
+    },
+    "assetKey": "armor_hands_rune",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_04_01",
+    "name": "Woven Leggings",
+    "type": "armor",
+    "subtype": "legs",
+    "rarity": "common",
+    "description": "Legs protection made from cloth.",
+    "stats": {
+      "attack": 0,
+      "defense": 3,
+      "durability": 60,
+      "weightKg": 0.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "armor_legs_cloth",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_04_02",
+    "name": "Leather Leggings",
+    "type": "armor",
+    "subtype": "legs",
+    "rarity": "common",
+    "description": "Legs protection made from leather.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "durability": 90,
+      "weightKg": 0.95
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 7,
+      "starterEligible": false
+    },
+    "assetKey": "armor_legs_leather",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_04_03",
+    "name": "Chain Leggings",
+    "type": "armor",
+    "subtype": "legs",
+    "rarity": "uncommon",
+    "description": "Legs protection made from chain.",
+    "stats": {
+      "attack": 0,
+      "defense": 8,
+      "durability": 120,
+      "weightKg": 1.5
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "armor_legs_chain",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_04_04",
+    "name": "Runic Leggings",
+    "type": "armor",
+    "subtype": "legs",
+    "rarity": "rare",
+    "description": "Legs protection made from rune.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "durability": 150,
+      "weightKg": 2.05
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 5,
+      "starterEligible": false
+    },
+    "assetKey": "armor_legs_rune",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_05_01",
+    "name": "Woven Boots",
+    "type": "armor",
+    "subtype": "feet",
+    "rarity": "common",
+    "description": "Feet protection made from cloth.",
+    "stats": {
+      "attack": 0,
+      "defense": 3,
+      "durability": 60,
+      "weightKg": 0.4
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "armor_feet_cloth",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_05_02",
+    "name": "Leather Boots",
+    "type": "armor",
+    "subtype": "feet",
+    "rarity": "common",
+    "description": "Feet protection made from leather.",
+    "stats": {
+      "attack": 0,
+      "defense": 5,
+      "durability": 90,
+      "weightKg": 0.95
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 7,
+      "starterEligible": false
+    },
+    "assetKey": "armor_feet_leather",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_05_03",
+    "name": "Chain Boots",
+    "type": "armor",
+    "subtype": "feet",
+    "rarity": "uncommon",
+    "description": "Feet protection made from chain.",
+    "stats": {
+      "attack": 0,
+      "defense": 8,
+      "durability": 120,
+      "weightKg": 1.5
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 6,
+      "starterEligible": false
+    },
+    "assetKey": "armor_feet_chain",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_a_05_04",
+    "name": "Runic Boots",
+    "type": "armor",
+    "subtype": "feet",
+    "rarity": "rare",
+    "description": "Feet protection made from rune.",
+    "stats": {
+      "attack": 0,
+      "defense": 12,
+      "durability": 150,
+      "weightKg": 2.05
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 5,
+      "starterEligible": false
+    },
+    "assetKey": "armor_feet_rune",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_01_01",
+    "name": "Basic Healing Tonic",
+    "type": "utility",
+    "subtype": "healing_tonic",
+    "rarity": "common",
+    "description": "Healing Tonic used for heal.",
+    "stats": {
+      "effectId": "heal",
+      "magnitude": 25,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_healing_tonic",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_01_02",
+    "name": "Refined Healing Tonic",
+    "type": "utility",
+    "subtype": "healing_tonic",
+    "rarity": "uncommon",
+    "description": "Healing Tonic used for heal.",
+    "stats": {
+      "effectId": "heal",
+      "magnitude": 40.0,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_healing_tonic",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_02_01",
+    "name": "Basic Energy Tonic",
+    "type": "utility",
+    "subtype": "energy_tonic",
+    "rarity": "common",
+    "description": "Energy Tonic used for restore energy.",
+    "stats": {
+      "effectId": "restore_energy",
+      "magnitude": 30,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_energy_tonic",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_02_02",
+    "name": "Refined Energy Tonic",
+    "type": "utility",
+    "subtype": "energy_tonic",
+    "rarity": "uncommon",
+    "description": "Energy Tonic used for restore energy.",
+    "stats": {
+      "effectId": "restore_energy",
+      "magnitude": 48.0,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_energy_tonic",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_03_01",
+    "name": "Basic Stamina Tea",
+    "type": "utility",
+    "subtype": "stamina_tea",
+    "rarity": "common",
+    "description": "Stamina Tea used for restore stamina.",
+    "stats": {
+      "effectId": "restore_stamina",
+      "magnitude": 30,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_stamina_tea",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_03_02",
+    "name": "Refined Stamina Tea",
+    "type": "utility",
+    "subtype": "stamina_tea",
+    "rarity": "uncommon",
+    "description": "Stamina Tea used for restore stamina.",
+    "stats": {
+      "effectId": "restore_stamina",
+      "magnitude": 48.0,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_stamina_tea",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_04_01",
+    "name": "Basic Torch",
+    "type": "utility",
+    "subtype": "torch",
+    "rarity": "common",
+    "description": "Torch used for light.",
+    "stats": {
+      "effectId": "light",
+      "magnitude": 6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_torch",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_04_02",
+    "name": "Refined Torch",
+    "type": "utility",
+    "subtype": "torch",
+    "rarity": "uncommon",
+    "description": "Torch used for light.",
+    "stats": {
+      "effectId": "light",
+      "magnitude": 9.6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_torch",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_05_01",
+    "name": "Basic Climbing Rope",
+    "type": "utility",
+    "subtype": "rope",
+    "rarity": "common",
+    "description": "Climbing Rope used for climb.",
+    "stats": {
+      "effectId": "climb",
+      "magnitude": 8,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_rope",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_05_02",
+    "name": "Refined Climbing Rope",
+    "type": "utility",
+    "subtype": "rope",
+    "rarity": "uncommon",
+    "description": "Climbing Rope used for climb.",
+    "stats": {
+      "effectId": "climb",
+      "magnitude": 12.8,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_rope",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_06_01",
+    "name": "Basic Compass",
+    "type": "utility",
+    "subtype": "compass",
+    "rarity": "common",
+    "description": "Compass used for navigation.",
+    "stats": {
+      "effectId": "navigation",
+      "magnitude": 1,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_compass",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_06_02",
+    "name": "Refined Compass",
+    "type": "utility",
+    "subtype": "compass",
+    "rarity": "uncommon",
+    "description": "Compass used for navigation.",
+    "stats": {
+      "effectId": "navigation",
+      "magnitude": 1.6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_compass",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_07_01",
+    "name": "Basic Glider",
+    "type": "utility",
+    "subtype": "glider",
+    "rarity": "common",
+    "description": "Glider used for glide.",
+    "stats": {
+      "effectId": "glide",
+      "magnitude": 1,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_glider",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_07_02",
+    "name": "Refined Glider",
+    "type": "utility",
+    "subtype": "glider",
+    "rarity": "uncommon",
+    "description": "Glider used for glide.",
+    "stats": {
+      "effectId": "glide",
+      "magnitude": 1.6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_glider",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_08_01",
+    "name": "Basic Harvesting Kit",
+    "type": "utility",
+    "subtype": "harvesting_kit",
+    "rarity": "common",
+    "description": "Harvesting Kit used for gather.",
+    "stats": {
+      "effectId": "gather",
+      "magnitude": 1,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_harvesting_kit",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_08_02",
+    "name": "Refined Harvesting Kit",
+    "type": "utility",
+    "subtype": "harvesting_kit",
+    "rarity": "uncommon",
+    "description": "Harvesting Kit used for gather.",
+    "stats": {
+      "effectId": "gather",
+      "magnitude": 1.6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_harvesting_kit",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_09_01",
+    "name": "Basic Camp Kit",
+    "type": "utility",
+    "subtype": "camp_kit",
+    "rarity": "common",
+    "description": "Camp Kit used for camp.",
+    "stats": {
+      "effectId": "camp",
+      "magnitude": 1,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_camp_kit",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_09_02",
+    "name": "Refined Camp Kit",
+    "type": "utility",
+    "subtype": "camp_kit",
+    "rarity": "uncommon",
+    "description": "Camp Kit used for camp.",
+    "stats": {
+      "effectId": "camp",
+      "magnitude": 1.6,
+      "uses": 100
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_camp_kit",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_10_01",
+    "name": "Basic Repair Kit",
+    "type": "utility",
+    "subtype": "repair_kit",
+    "rarity": "common",
+    "description": "Repair Kit used for repair.",
+    "stats": {
+      "effectId": "repair",
+      "magnitude": 20,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 8,
+      "starterEligible": false
+    },
+    "assetKey": "utility_repair_kit",
+    "schemaVersion": 1
+  },
+  {
+    "id": "it_u_10_02",
+    "name": "Refined Repair Kit",
+    "type": "utility",
+    "subtype": "repair_kit",
+    "rarity": "uncommon",
+    "description": "Repair Kit used for repair.",
+    "stats": {
+      "effectId": "repair",
+      "magnitude": 32.0,
+      "uses": 1
+    },
+    "requirements": {
+      "level": 0,
+      "class": null
+    },
+    "discovery": {
+      "weight": 4,
+      "starterEligible": false
+    },
+    "assetKey": "utility_repair_kit",
+    "schemaVersion": 1
+  }
+]

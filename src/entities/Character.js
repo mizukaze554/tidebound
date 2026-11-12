@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { AnimationStateController } from './AnimationController.js';
+import { modifier } from '../combat/CatalogModifiers.js';
 
 export class Character {
   constructor(scene, { color, accent, name, position, gender = 'male', enemy = false }) {
@@ -42,6 +43,8 @@ export class Character {
     this.shieldTimer = 0;
     this.stats = { dealt: 0, received: 0, skills: 0, hits: 0, blocks: 0, perfectBlocks: 0, dodges: 0 };
     this.cooldowns = [0, 0, 0];
+    this.statuses = [];
+    this.buffs = [];
     this.animTime = Math.random() * 10;
     this.landingTimer = 0;
     this.gender = gender;
@@ -114,7 +117,9 @@ export class Character {
     const moving = direction.lengthSq() > 0.01;
     if (!moving) return false;
     const running = sprint && this.stamina > 4;
-    const speed = this.speed * (running ? 1.62 : 1);
+    const statusSpeed = this.statuses.reduce((value, entry) => value * modifier('status', entry.id).speed, 1);
+    const buffSpeed = this.buffs.reduce((value, entry) => value * modifier('buff', entry.id, entry.magnitude).speed, 1);
+    const speed = this.speed * statusSpeed * buffSpeed * (running ? 1.62 : 1);
     this.position.addScaledVector(direction.normalize(), speed * dt);
     this.face(direction, dt);
     if (running) this.stamina = Math.max(0, this.stamina - 18 * dt);
@@ -183,7 +188,9 @@ export class Character {
     const facingSource = this.facing.dot(toSource) > 0.12;
     const blocked = this.blocking && facingSource && this.stamina > 0;
     const perfect = blocked && this.perfectBlockTimer > 0;
-    let damage = Math.max(1, amount - this.defense);
+    const defenseFactor = this.statuses.reduce((value, entry) => value * modifier('status', entry.id).defense, 1)
+      * this.buffs.reduce((value, entry) => value * modifier('buff', entry.id, entry.magnitude).defense, 1);
+    let damage = Math.max(1, amount - this.defense * defenseFactor);
     if (blocked) {
       this.stats.blocks += 1;
       if (perfect) this.stats.perfectBlocks += 1;
@@ -218,6 +225,23 @@ export class Character {
     const actual = Math.min(this.maxHealth - this.health, amount);
     this.health += actual;
     return actual;
+  }
+
+  effectiveAttackPower() {
+    return this.attackPower * this.statuses.reduce((value, entry) => value * modifier('status', entry.id).attack, 1)
+      * this.buffs.reduce((value, entry) => value * modifier('buff', entry.id, entry.magnitude).attack, 1);
+  }
+
+  addStatus(id, durationSec) {
+    const current = this.statuses.find((entry) => entry.id === id);
+    if (current) current.remaining = Math.max(current.remaining, durationSec);
+    else this.statuses.push({ id, remaining: durationSec, tick: 0 });
+  }
+
+  addBuff(id, magnitude, durationSec) {
+    const current = this.buffs.find((entry) => entry.id === id);
+    if (current) { current.remaining = Math.max(current.remaining, durationSec); current.magnitude = Math.max(current.magnitude, magnitude); }
+    else this.buffs.push({ id, magnitude, remaining: durationSec });
   }
 
   capturePreviousPosition() { this.previousPosition.copy(this.position); }
@@ -263,6 +287,23 @@ export class Character {
   }
 
   update(dt, movementState = 0) {
+    for (const status of this.statuses) {
+      status.remaining -= dt;
+      status.tick += dt;
+      if (status.tick >= 1 && this.alive) {
+        status.tick -= 1;
+        const damage = modifier('status', status.id).dot;
+        if (damage) { this.health = Math.max(0, this.health - damage); if (this.health === 0) this.alive = false; }
+        if (status.id === 'drain') this.energy = Math.max(0, this.energy - 3);
+      }
+    }
+    this.statuses = this.statuses.filter((entry) => entry.remaining > 0);
+    for (const buff of this.buffs) {
+      buff.remaining -= dt;
+      const healing = modifier('buff', buff.id, buff.magnitude).healing;
+      if (healing && this.alive) this.heal(healing * dt * 3);
+    }
+    this.buffs = this.buffs.filter((entry) => entry.remaining > 0);
     this.animTime += dt;
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.hitStun = Math.max(0, this.hitStun - dt);

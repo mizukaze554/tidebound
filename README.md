@@ -1,126 +1,67 @@
 # TIDEBOUND
 
-TIDEBOUND is a playable third-person 3D combat prototype built with Three.js, Anime.js, vanilla JavaScript, and Vite. Every character, weapon, arena prop, and combat effect is generated from primitive geometry at runtime.
+TIDEBOUND is an offline, single-player Three.js world. Choose an appearance, explore a spherical planet, discover skills and items, gather materials, build structures, and fight packs of wildlings that notice you nearby. There is no timed duel on the title screen.
 
-## Explore or duel
+## Play
 
-Choose **Peaceful Explore** on the title screen to walk the globe without a timer or hostile AI. Roaming creatures are friendly scenery. Choose **Enter the Duel** for the original timed fight. **How to Play** is available from the title screen, pause menu, and exploration HUD. Music begins after the first tap or key press; its volume can be changed in Settings.
-
-## v1.3 — The Living Duel
-
-- Draws have their own result flow and optional music track.
-- The three-hit combo, new `X` heavy attack, perfect guards, dodge invulnerability, hit-stop, elemental bursts, and difficulty-aware AI improve duel pacing.
-- Skill Creator 2.0 adds projectile count, spread, knockback, casting time, strict JSON import, and safe JSON export while migrating v1.2 techniques automatically.
-- Optional GLB/glTF characters map idle, walk, run, sprint, jump, landing, three attacks, block, dodge, hit, and defeat clips while retaining geometric fallbacks.
-- The PWA build precaches hashed production JavaScript/CSS, supports offline single-player play, detects updates, and never clears localStorage techniques.
-- Exact 192×192 and 512×512 maskable icons, install prompts, iOS guidance, safe-area-aware landscape controls, and conservative mobile graphics improve installation and mobile play.
-- Low, Medium, and High presets now scale terrain, shadows, weather, and combat particles. The optional performance display reports FPS, draw calls, triangles, and active effects.
-- The duel sanctuary adds instanced curved-surface rocks and flowers without substantially increasing draw calls.
-
-## Seamless generated planet
-
-The world is a spherical, boundary-free planet with an Earth-sized declared surface area of **510.1 million km²**. Rendering uses compact engine units for stable browser physics while `kmPerUnit` maps those units onto the authored geographic scale. Taller terrain and trees, a wider clear-weather view, and streamed roaming creatures make nearby travel feel more expansive.
-
-- Terrain is split into deterministic latitude/longitude chunks around the player.
-- A stable coordinate hash controls height, biome, vegetation, crystals, and rare ruins.
-- Chunks outside the active radius are removed and their GPU resources disposed.
-- Revisiting coordinates regenerates the same terrain and landmarks.
-- Longitude wraps continuously and terrain noise is periodic at the world seam.
-- Radial gravity, movement, camera orientation, combat steering, and effects follow the curved surface.
-- Clear, rain, fog, storm, and snow conditions rotate automatically every 40 seconds.
-
-The low-detail planetary sphere remains visible below the streamed high-detail terrain, so the world is always a globe even when distant chunks are unloaded.
-
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-Open the URL printed by Vite (normally `http://localhost:5173`). Click the world once to capture the mouse. Create a production build with `npm run build`.
-
-## Deploy to Netlify
-
-The repository includes `netlify.toml`; Netlify automatically uses the correct build command, Node version, SPA fallback, caching, and `dist` publish directory.
-
-When importing the GitHub repository in Netlify, use:
-
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Node version: `22`
-
-Build locally before deploying:
-
-```bash
-npm ci
-npm run build
-```
-
-Run the production build plus focused collision, persistence, import-schema, AI, audio, match-result, and PWA tests:
-
-```bash
-npm test
-```
-
-Optional deployment with the Netlify CLI:
-
-```bash
-npx netlify-cli login
-npx netlify-cli init
-npx netlify-cli deploy --prod --dir=dist
-```
+1. Select **Enter World**, then choose an appearance. The first character receives one or two random starter skills and exactly one basic weapon. These rewards are stored once and never rerolled on refresh.
+2. Open the **Discovery Journal** to see only skills, items, and blueprints you have earned. Equip discovered skills to E, R, or F. Equip a weapon or armor from Inventory.
+3. Explore the grassland around the sanctuary. Gather grass, trees, and stones for fiber, wood, and stone. The first gathers reveal foundation, wall, and hut blueprints. Coastal sand and mountain iron unlock road and watchtower blueprints. Open Blueprints, preview a structure, rotate it, and place it on clear, sufficiently flat ground when you have its materials.
+4. Wildlings roam in groups. They attack if they see you within range or you approach closely. Normal attacks, blocks, dodges, and catalog skills work in these encounters. Defeat and exploration can reveal more discoveries.
 
 ## Controls
 
 | Input | Action |
 | --- | --- |
-| W/A/S/D | Camera-relative movement |
+| WASD / left touch stick | Move |
+| Mouse / right touch area | Look |
 | Shift | Sprint |
-| Space | Jump |
-| Left mouse | Three-hit combo |
+| Space / jump button | Jump |
+| G / Gather button | Gather a nearby resource |
+| J / Journal button | Open the Discovery Journal |
+| B | Open discovered blueprints |
+| Left click / attack button | Attack |
 | X | Heavy attack |
-| Right mouse | Block |
-| Q | Dodge with invulnerability frames |
-| E / R / F | Equipped custom skills |
-| Tab | Toggle target lock |
-| Esc | Pause |
+| Right click / block button | Block |
+| Q / dodge button | Dodge |
+| E, R, F / skill buttons | Use equipped skills |
+| Esc / pause button | Pause |
 
-## Skill construction rules
+Music starts after a tap or key press. Volume and AI difficulty are available in Settings. Mobile play uses landscape orientation.
 
-Skills are stored in `localStorage`, so saved techniques and equipped slots survive refreshes and PWA updates. Power, range, speed, duration, projectile count, spread, knockback, and casting time participate in shared balance formulas. Imports accept declarative JSON only, are limited to 32 KB and 24 techniques, receive fresh IDs, and never execute code.
+## Catalogs and saves
 
-Supported combinations:
+- `src/data/catalog/skills.json`: exactly 1,000 fixed skills across 20 elemental domains. Every catalog effect type has a combat handler: damage, status, shield, buff, or terrain-clamped dash.
+- `src/data/catalog/items.json`: exactly 100 fixed items. Weapons affect attack and reach; armor affects defense. Utility items are visible when found but their noncombat actions are not implemented yet.
+- `src/data/world-kit/world_assets.json`: exactly 1,000 procedural asset specifications. `world_recipes.json` defines 350 structures. The kit contains placeholder geometry rules, not finished textured 3D models. Current natural spawning uses seeded biome selection and a capped number of nearby assets; the grassland guarantees gatherable grass, trees, and stones.
+- Discovery, materials, harvested nodes, equipped slots, and structures use versioned localStorage records. Harvested nodes regrow after five minutes. Older custom skills remain under their existing storage keys and are never silently erased; the journal shows a migration notice when they exist. The unrestricted Skill Creator is no longer in the main game flow.
+- Catalog names and descriptions are only shown after discovery. The browser still downloads the complete catalogs in its JavaScript bundle for offline play. This is **UI concealment, not security**. Online multiplayer would require a trusted server to hold the catalog, perform reward rolls, log ownership and discovery transactions, and validate combat and building.
 
-| Shape | Effects | Runtime behavior |
-| --- | --- | --- |
-| Projectile | Damage, Push, Pull | A physical projectile travels until it hits once or reaches its configured range. |
-| Area | Damage, Push, Pull, Heal | An expanding ring affects an opponent once. Heal restores the caster immediately while showing the area pulse. |
-| Beam | Damage, Push, Pull | An instant finite line/capsule test applies one hit. |
-| Self | Shield, Heal, Push | Shield grants temporary absorb health; Heal restores the caster; Push becomes a forward elemental dash. |
+See [CATALOG_SCHEMA.md](./CATALOG_SCHEMA.md) for fields, validation, persistence, and the current world-slice limits.
 
-Other combinations are rejected in the editor with a specific explanation. Elemental identity modifies behavior slightly: Fire damage is stronger, Wind projectiles are faster, Earth shields are tougher, and Water emphasizes control visually.
+## Run and test
 
-## Architecture
+Requires Node.js 22 or newer.
 
-- `src/core` — game loop, input, and third-person camera
-- `src/world` — procedural arena and lighting
-- `src/entities` — character rigs, animation, and AI state machine
-- `src/combat` — melee hit tests and data-driven skill runtime
-- `src/effects` — pooled-lifetime procedural feedback and Web Audio cues
-- `src/ui` — menus, HUD, results, and skill editor
-- `src/data` — browser persistence and starter skills
+```bash
+npm ci
+npm run dev
+```
 
-Future server-authoritative boundaries are documented in [MULTIPLAYER.md](./MULTIPLAYER.md).
+Open the Vite URL shown in the terminal. To verify and build:
 
-## PWA updates
+```bash
+npm test
+npm run build
+npm run preview
+```
 
-Deploying v1.4 installs a new `tidebound-v1.4.0` application cache with the music loops. Earlier caches are removed after the new worker activates. When an update finishes downloading, use the in-game **UPDATE** notification; the page reloads after activation. Saved skills and audio/settings preferences remain in localStorage and require no migration step.
+`npm test` builds the production app and runs the Node test suite. Vite precaches the application bundle and music in the PWA service worker. A new version installs a new cache; existing saves remain in localStorage. Netlify uses `netlify.toml` and publishes `dist`.
 
-The main loop clamps frame delta to 50 ms, gameplay uses delta-time movement, temporary Three.js resources are disposed on expiry, particles/effects are capped by short lifetimes, and gameplay pauses when the window loses focus.
+## Current limits
+
+The first playable grassland and three starter structures are implemented and tested. Coast and mountain resource nodes additionally unlock a dirt road and a watchtower. The remaining world specifications and recipes are validated and can be selected by the seeded spawner or discovered through later harvesting, but many resource types, utility-item actions, automated settlements, and polished artwork are not yet implemented. Water features and caves use the supplied placeholder meshes; continuous rivers and enterable caves are not implemented. Wildling sight uses range and facing rather than terrain occlusion. Offline localStorage saves can be modified by the player and are not suitable for competitive multiplayer.
 
 ## License
 
-Released under the [MIT License](./LICENSE). Copyright © 2026 mizukaze554.
-
-Third-party and owner-supplied media are governed separately; see [ASSETS.md](./ASSETS.md).
+Released under [MIT](./LICENSE). The bundled music is original and generated from [tools/generate_music.py](./tools/generate_music.py). See [ASSETS.md](./ASSETS.md) for media details.
