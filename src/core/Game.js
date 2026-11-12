@@ -19,12 +19,14 @@ export class Game {
   constructor(container, uiRoot) {
     this.container = container; this.uiRoot = uiRoot;
     this.state = 'menu'; this.difficulty = 'normal'; this.renderScale = 1;
-    this.locked = true; this.matchTime = 180; this.resultPending = 0; this.gender = 'male';
+    this.locked = true; this.matchTime = 180; this.matchElapsed = 0; this.resultPending = 0; this.gender = 'male';
     this.matchOutcome = null; this.hitStop = 0; this.footstepTimer = 0;
     this.clock = new THREE.Clock();
   }
 
   init() {
+    if (this.initialized) return;
+    this.initialized = true;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 2200);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -68,13 +70,22 @@ export class Game {
       music: (value) => this.audio.setMusicVolume(value),
       sfx: (value) => this.audio.setSfxVolume(value),
       mute: (value) => this.audio.setMuted(value),
-      sensitivity: (value) => { this.followCamera.sensitivity = value; },
+      sensitivity: (value) => { this.followCamera.sensitivity = value; localStorage.setItem('tidebound.sensitivity', String(value)); },
+      shake: (value) => { this.followCamera.shakeEnabled = value; localStorage.setItem('tidebound.cameraShake', String(value)); },
+      performance: (value) => { this.hud.setPerformanceVisible(value); localStorage.setItem('tidebound.performanceDisplay', String(value)); },
       fullscreen: () => this.toggleFullscreen(),
     });
     this.menu.showMain();
     this.menu.setAudioSettings(this.audio);
     this.hud.setSkills(this.skills);
-    this.setGraphics('balanced');
+    const mobile = matchMedia('(pointer: coarse)').matches || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+    const preset = localStorage.getItem('tidebound.graphics') || (mobile ? 'low' : 'balanced');
+    this.followCamera.sensitivity = Number(localStorage.getItem('tidebound.sensitivity') || 1);
+    this.followCamera.shakeEnabled = localStorage.getItem('tidebound.cameraShake') !== 'false';
+    const performanceVisible = localStorage.getItem('tidebound.performanceDisplay') === 'true';
+    this.hud.setPerformanceVisible(performanceVisible);
+    this.setGraphics(preset);
+    this.menu.setGameSettings({ graphics: preset, sensitivity: this.followCamera.sensitivity, shake: this.followCamera.shakeEnabled, performance: performanceVisible });
     const unlockAudio = () => { this.audio.unlock(); this.audio.playMusic(this.state === 'playing' ? 'combat' : 'menu'); };
     window.addEventListener('pointerdown', unlockAudio, { once: true });
     window.addEventListener('keydown', unlockAudio, { once: true });
@@ -107,7 +118,7 @@ export class Game {
     this.followCamera.groundForward.copy(this.enemy.position).sub(this.player.position).projectOnPlane(this.player.up).normalize();
     this.followCamera.position.copy(this.player.position).addScaledVector(this.player.up, 4).addScaledVector(this.followCamera.groundForward, -9);
     this.followCamera.lookAt.copy(this.player.position).addScaledVector(this.player.up, 1.5);
-    this.matchTime = 180; this.resultPending = 0; this.matchOutcome = null; this.hitStop = 0; this.locked = true;
+    this.matchTime = 180; this.matchElapsed = 0; this.resultPending = 0; this.matchOutcome = null; this.hitStop = 0; this.locked = true;
     this.state = 'playing'; this.input.enabled = true; this.input.reset();
     this.menu.hideAll(); this.menu.settings.classList.add('hidden');
     this.hud.setSkills(this.skills); this.hud.show(); this.hud.message('DUEL BEGIN', 'good');
@@ -123,6 +134,7 @@ export class Game {
       character.dispose();
     }
     this.player = this.enemy = null;
+    this.ai = null;
   }
 
   equipSkill(skill, slot) {
@@ -144,7 +156,8 @@ export class Game {
     flash.classList.remove('hit-flash'); void flash.offsetWidth; flash.classList.add('hit-flash');
     this.hitStop = Math.max(this.hitStop, result.blocked ? 0.025 : result.critical ? 0.075 : 0.055);
     this.followCamera.addShake(result.blocked ? 0.08 : Math.min(result.critical ? 0.34 : 0.28, 0.1 + (result.damage || 0) * 0.006));
-    if (result.blocked) this.effects.blockBurst(target);
+    if (result.blocked) this.effects.blockBurst(target, result.perfect);
+    if (result.perfect) this.hud.message('PERFECT GUARD', 'good');
     if (!target.alive && !this.resultPending) {
       this.matchOutcome = target === this.player ? 'defeat' : 'victory';
       this.resultPending = 1.8;
@@ -159,8 +172,9 @@ export class Game {
     if (this.input.down('KeyD')) move.add(this.followCamera.right());
     if (this.input.down('KeyA')) move.sub(this.followCamera.right());
     if (this.input.consume('Space') && this.player.jump()) this.audio.playSfx('jump');
-    if (this.input.consume('KeyQ') && this.player.dodge(move)) this.audio.playSfx('dodge');
+    if (this.input.consume('KeyQ') && this.player.dodge(move)) { this.audio.playSfx('dodge'); this.effects.windTrail(this.player.position, move.lengthSq() ? move.clone().normalize() : this.player.facing.clone().negate(), 0xa5ffd8); }
     if (this.input.consume('Mouse0') && this.player.startAttack()) this.audio.playSfx('swing');
+    if (this.input.consume('KeyX') && this.player.startHeavyAttack()) { this.audio.playSfx('swing'); this.hud.message('HEAVY CURRENT', 'good'); }
     this.player.setBlock(this.input.button(2));
     if (this.input.consume('KeyE')) this.useSkill(this.player, 0);
     if (this.input.consume('KeyR')) this.useSkill(this.player, 1);
@@ -180,6 +194,7 @@ export class Game {
     }
     this.world.update(time, dt, this.player);
     this.matchTime = Math.max(0, this.matchTime - dt);
+    this.matchElapsed += dt;
     this.player.capturePreviousPosition(); this.enemy.capturePreviousPosition();
     const playerMovement = this.updatePlayer(dt);
     if (this.state !== 'playing') return;
@@ -188,7 +203,7 @@ export class Game {
     this.player.update(dt, playerMovement);
     this.enemy.update(dt, enemyMovement);
     this.world.constrain(this.player); this.world.constrain(this.enemy);
-    if (!playerWasGrounded && this.player.grounded) this.audio.playSfx('landing');
+    if (!playerWasGrounded && this.player.grounded) { this.player.landingTimer = 0.18; this.audio.playSfx('landing'); }
     this.footstepTimer -= dt;
     if (playerMovement && this.player.grounded && this.footstepTimer <= 0) {
       this.audio.playSfx('footsteps');
@@ -200,7 +215,7 @@ export class Game {
     this.effects.update(dt);
     this.separateCharacters();
     this.followCamera.update(dt, this.player, this.enemy, this.input, this.locked);
-    this.hud.update(this.player, this.enemy, this.ai.state, this.skills, dt, this.locked, this.matchTime, this.world);
+    this.hud.update(this.player, this.enemy, this.ai.state, this.skills, dt, this.locked, this.matchTime, this.world, this.renderer, this.effects);
 
     if (this.matchTime <= 0 && !this.resultPending) {
       this.matchOutcome = resolveMatchOutcome(this.player.health, this.enemy.health);
@@ -228,8 +243,8 @@ export class Game {
     this.state = 'result'; this.input.enabled = false;
     document.exitPointerLock?.(); this.hud.hide();
     this.mobileControls.hide();
-    this.menu.showResult(outcome, this.player.stats);
-    this.audio.playMusic(outcome === 'defeat' ? 'defeat' : 'victory');
+    this.menu.showResult(outcome, this.player.stats, this.matchElapsed);
+    this.audio.playMusic({ victory: 'victory', defeat: 'defeat', draw: 'draw' }[outcome] || 'draw');
   }
 
   togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
@@ -242,6 +257,8 @@ export class Game {
     this.renderScale = settings.scale;
     this.renderer.shadowMap.enabled = settings.shadows;
     this.world.setQuality(preset);
+    this.effects.setQuality(preset);
+    localStorage.setItem('tidebound.graphics', preset);
     this.resize();
   }
 

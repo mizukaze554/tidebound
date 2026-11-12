@@ -2,17 +2,16 @@
 
 TIDEBOUND is a playable third-person 3D combat prototype built with Three.js, Anime.js, vanilla JavaScript, and Vite. Every character, weapon, arena prop, and combat effect is generated from primitive geometry at runtime.
 
-## v1.2 combat upgrade
+## v1.3 — The Living Duel
 
-- Swept projectile-versus-body-capsule collision prevents tunneling.
-- Permanent skill IDs support safe create, edit, update, delete, equip, and unequip operations.
-- Skill ranges now match their real projectile, area, beam, and dash distances.
-- Hit-stop, camera shake, perfect blocks, clearer wind-ups, combo buffering, critical feedback, and cooldown numbers improve combat readability.
-- Optional GLB/glTF characters use `GLTFLoader`, `AnimationMixer`, and animation-state mapping while retaining geometric fallbacks.
-- Optional music and SFX use independent volume controls, mute, smooth transitions, autoplay-safe unlocking, and synthesized fallbacks.
-- Low, Medium, and High world presets control streamed terrain detail, grass density, weather particles, and shadows.
-- An emblem derived from the owner-supplied TIDEBOUND title artwork is integrated into the main menu.
-- Installable PWA support includes offline runtime caching, a branded browser/PWA icon, enforced landscape orientation, and touch movement/combat controls for mobile play.
+- Draws have their own result flow and optional music track.
+- The three-hit combo, new `X` heavy attack, perfect guards, dodge invulnerability, hit-stop, elemental bursts, and difficulty-aware AI improve duel pacing.
+- Skill Creator 2.0 adds projectile count, spread, knockback, casting time, strict JSON import, and safe JSON export while migrating v1.2 techniques automatically.
+- Optional GLB/glTF characters map idle, walk, run, sprint, jump, landing, three attacks, block, dodge, hit, and defeat clips while retaining geometric fallbacks.
+- The PWA build precaches hashed production JavaScript/CSS, supports offline single-player play, detects updates, and never clears localStorage techniques.
+- Exact 192×192 and 512×512 maskable icons, install prompts, iOS guidance, safe-area-aware landscape controls, and conservative mobile graphics improve installation and mobile play.
+- Low, Medium, and High presets now scale terrain, shadows, weather, and combat particles. The optional performance display reports FPS, draw calls, triangles, and active effects.
+- The duel sanctuary adds instanced curved-surface rocks and flowers without substantially increasing draw calls.
 
 ## Seamless generated planet
 
@@ -54,7 +53,7 @@ npm ci
 npm run build
 ```
 
-Run focused collision, persistence, ID, and match-result tests:
+Run the production build plus focused collision, persistence, import-schema, AI, audio, match-result, and PWA tests:
 
 ```bash
 npm test
@@ -76,6 +75,7 @@ npx netlify-cli deploy --prod --dir=dist
 | Shift | Sprint |
 | Space | Jump |
 | Left mouse | Three-hit combo |
+| X | Heavy attack |
 | Right mouse | Block |
 | Q | Dodge with invulnerability frames |
 | E / R / F | Equipped custom skills |
@@ -84,7 +84,7 @@ npx netlify-cli deploy --prod --dir=dist
 
 ## Skill construction rules
 
-Skills are stored in `localStorage`, so saved techniques and equipped slots survive refreshes. Power, range, speed, and duration each increase the calculated energy load. Power and duration also increase cooldown time.
+Skills are stored in `localStorage`, so saved techniques and equipped slots survive refreshes and PWA updates. Power, range, speed, duration, projectile count, spread, knockback, and casting time participate in shared balance formulas. Imports accept declarative JSON only, are limited to 32 KB and 24 techniques, receive fresh IDs, and never execute code.
 
 Supported combinations:
 
@@ -106,6 +106,12 @@ Other combinations are rejected in the editor with a specific explanation. Eleme
 - `src/effects` — pooled-lifetime procedural feedback and Web Audio cues
 - `src/ui` — menus, HUD, results, and skill editor
 - `src/data` — browser persistence and starter skills
+
+Future server-authoritative boundaries are documented in [MULTIPLAYER.md](./MULTIPLAYER.md).
+
+## PWA updates
+
+Deploying v1.3 installs a new `tidebound-v1.3.0` application cache. Existing v1.2 caches are removed only after the new worker activates. When an update finishes downloading, use the in-game **UPDATE** notification; the page reloads after activation. Saved skills and audio/settings preferences remain in localStorage and require no migration step.
 
 The main loop clamps frame delta to 50 ms, gameplay uses delta-time movement, temporary Three.js resources are disposed on expiry, particles/effects are capped by short lifetimes, and gameplay pauses when the window loses focus.
 

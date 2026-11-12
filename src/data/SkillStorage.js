@@ -1,3 +1,5 @@
+import { normalizeSkillDefinition } from './SkillSchema.js';
+
 const KEY = 'tidebound.customSkills.v2';
 const LEGACY_KEY = 'tidebound.customSkills.v1';
 const EQUIPPED_KEY = 'tidebound.equippedSkills.v1';
@@ -27,7 +29,7 @@ export function normalizeSkills(skills) {
     let id = typeof skill.id === 'string' && skill.id.trim() ? skill.id : `skill-migrated-${hashString(`${index}:${JSON.stringify(skill)}`)}`;
     while (used.has(id)) id = `${id}-${index}`;
     used.add(id);
-    return { ...skill, id };
+    return { ...normalizeSkillDefinition(skill), id };
   });
 }
 
@@ -41,7 +43,7 @@ export class SkillStorage {
       const skills = normalizeSkills(Array.isArray(parsed) ? parsed : DEFAULT_SKILLS.map((skill) => ({ ...skill })));
       this.save(skills); // Persists migrated IDs once so subsequent edits are stable.
       return skills;
-    } catch { return DEFAULT_SKILLS.map((skill) => ({ ...skill })); }
+    } catch { return normalizeSkills(DEFAULT_SKILLS.map((skill) => ({ ...skill }))); }
   }
 
   save(skills) {
@@ -52,7 +54,7 @@ export class SkillStorage {
 
   upsert(skill) {
     const skills = this.load();
-    const normalized = { ...skill, id: skill.id || createSkillId() };
+    const normalized = { ...normalizeSkillDefinition(skill), id: skill.id || createSkillId() };
     const index = skills.findIndex((item) => item.id === normalized.id);
     if (index >= 0) skills[index] = normalized; else skills.push(normalized);
     this.save(skills);

@@ -1,10 +1,12 @@
 # TIDEBOUND asset manifest
 
-TIDEBOUND v1.2 does not bundle third-party character models, music, or sound-effect packs. The game remains functional with procedural character fallbacks and synthesized Web Audio effects.
+TIDEBOUND v1.3 does not bundle third-party character models, music, or sound-effect packs. The game remains functional with procedural character fallbacks and synthesized Web Audio effects.
 
 ## Bundled artwork
 
-- `public/assets/tidebound-icon.png` — square app emblem derived from title artwork supplied by the project owner, used on the welcome screen, browser tab, and PWA manifest. The large source banner is intentionally not bundled to reduce the install size.
+- `artwork/tidebound-icon-source.png` — high-resolution source emblem derived from title artwork supplied by the project owner. It sits outside `public/` so it is not copied into production builds.
+- `public/assets/tidebound-icon-192.png` — browser and compact PWA icon.
+- `public/assets/tidebound-icon-512.png` — install and maskable PWA icon.
 
 The project owner is responsible for confirming the right to publish and redistribute supplied artwork. Media files are not automatically covered by the repository's MIT software license.
 

@@ -113,8 +113,22 @@ export class PlanetWorld {
       matrix.compose(crystalPosition, quaternion, new THREE.Vector3(1, 1.35, 1)); crystals.setMatrixAt(i, matrix);
     }
     pillars.castShadow = pillars.receiveShadow = true; crystals.castShadow = true;
-    this.scene.add(pillars, crystals);
-    this.sanctuary = { ring, pillars, crystals };
+    const rockGeometry = new THREE.DodecahedronGeometry(0.42, 0);
+    const rocks = new THREE.InstancedMesh(rockGeometry, new THREE.MeshToonMaterial({ color: 0x667c78 }), 22);
+    const flowerGeometry = new THREE.OctahedronGeometry(0.12, 0);
+    const flowers = new THREE.InstancedMesh(flowerGeometry, new THREE.MeshToonMaterial({ color: 0xff9fc8, emissive: 0x7a294b, emissiveIntensity: 0.35 }), 34);
+    const setDecoration = (mesh, index, angle, distance, height, scale) => {
+      const tangentPoint = center.clone().addScaledVector(east, Math.cos(angle) * distance).addScaledVector(north, Math.sin(angle) * distance);
+      const normal = tangentPoint.clone().normalize();
+      const position = normal.multiplyScalar(this.surfaceRadius(tangentPoint) + height);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+      matrix.compose(position, quaternion, scale); mesh.setMatrixAt(index, matrix);
+    };
+    for (let i = 0; i < rocks.count; i++) setDecoration(rocks, i, this.hash(i, 801) * Math.PI * 2, 12 + this.hash(i, 802) * 7, 0.2, new THREE.Vector3(0.6 + this.hash(i, 803), 0.45 + this.hash(i, 804) * 0.7, 0.6 + this.hash(i, 805)));
+    for (let i = 0; i < flowers.count; i++) setDecoration(flowers, i, this.hash(i, 811) * Math.PI * 2, 9.3 + this.hash(i, 812) * 9, 0.18, new THREE.Vector3(0.65, 1.2, 0.65));
+    rocks.castShadow = rocks.receiveShadow = true;
+    this.scene.add(pillars, crystals, rocks, flowers);
+    this.sanctuary = { ring, pillars, crystals, rocks, flowers };
   }
 
   hash(x, y = 0) {
@@ -330,14 +344,18 @@ export class PlanetWorld {
 
   setQuality(preset = 'balanced') {
     const config = {
-      high: { radius: 4, segments: 12, grass: 48, particles: 1 },
-      balanced: { radius: 3, segments: 10, grass: 34, particles: 0.75 },
-      low: { radius: 2, segments: 6, grass: 12, particles: 0.4 },
-    }[preset] || { radius: 3, segments: 10, grass: 34, particles: 0.75 };
+      high: { radius: 4, segments: 12, grass: 48, particles: 1, shadow: 2048 },
+      balanced: { radius: 3, segments: 10, grass: 34, particles: 0.75, shadow: 1024 },
+      low: { radius: 2, segments: 6, grass: 12, particles: 0.4, shadow: 512 },
+    }[preset] || { radius: 3, segments: 10, grass: 34, particles: 0.75, shadow: 1024 };
     if (this.quality === preset && this.chunks.size) return;
     this.quality = preset;
     this.chunkRadius = config.radius; this.terrainSegments = config.segments;
     this.grassCount = config.grass; this.particleMultiplier = config.particles;
+    if (this.sun.shadow.mapSize.x !== config.shadow) {
+      this.sun.shadow.mapSize.set(config.shadow, config.shadow);
+      this.sun.shadow.map?.dispose(); this.sun.shadow.map = null;
+    }
     const position = this.lastStreamPosition?.clone() || this.surfacePoint(this.spawnLat, this.spawnLon);
     for (const [key, chunk] of [...this.chunks]) this.removeChunk(key, chunk);
     this.stream(position);

@@ -12,9 +12,10 @@ export class ThirdPersonCamera {
     this.shake = 0;
     this.shakeTime = 0;
     this.sensitivity = 1;
+    this.shakeEnabled = true;
   }
 
-  addShake(strength = 0.15, duration = 0.16) { this.shake = Math.max(this.shake, strength); this.shakeTime = Math.max(this.shakeTime, duration); }
+  addShake(strength = 0.15, duration = 0.16) { if (!this.shakeEnabled) return; this.shake = Math.max(this.shake, strength); this.shakeTime = Math.max(this.shakeTime, duration); }
 
   update(dt, player, enemy, input, locked) {
     const up = player.up;

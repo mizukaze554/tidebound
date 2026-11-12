@@ -40,9 +40,10 @@ export class Character {
     this.dodgeTimer = 0;
     this.shield = 0;
     this.shieldTimer = 0;
-    this.stats = { dealt: 0, received: 0, skills: 0 };
+    this.stats = { dealt: 0, received: 0, skills: 0, hits: 0, blocks: 0, perfectBlocks: 0, dodges: 0 };
     this.cooldowns = [0, 0, 0];
     this.animTime = Math.random() * 10;
+    this.landingTimer = 0;
     this.gender = gender;
     this.buildModel(color, accent);
     this.fallbackObjects = [...this.group.children];
@@ -131,6 +132,7 @@ export class Character {
   dodge(direction) {
     if (!this.alive || this.stamina < 22 || this.dodgeTimer > 0 || this.hitStun > 0) return false;
     this.stamina -= 22;
+    this.stats.dodges += 1;
     this.dodgeTimer = 0.42;
     this.invulnerable = 0.32;
     const dir = direction.lengthSq() > 0.01 ? direction.clone().projectOnPlane(this.up).normalize() : this.facing.clone().negate();
@@ -158,6 +160,17 @@ export class Character {
     return true;
   }
 
+  startHeavyAttack() {
+    if (!this.alive || this.hitStun > 0 || this.dodgeTimer > 0 || this.blocking || this.actionTimer > 0 || this.stamina < 28) return false;
+    this.stamina -= 28;
+    this.comboWindow = 0;
+    this.comboStep = 3;
+    this.actionTimer = 0.88;
+    this.attack = { step: 3, duration: 0.88, hit: false, windup: 0.52, heavy: true };
+    this.comboQueued = false;
+    return true;
+  }
+
   setBlock(value) {
     const next = value && this.alive && this.hitStun <= 0 && this.stamina > 0 && this.dodgeTimer <= 0;
     if (next && !this.blocking) this.perfectBlockTimer = 0.16;
@@ -172,6 +185,8 @@ export class Character {
     const perfect = blocked && this.perfectBlockTimer > 0;
     let damage = Math.max(1, amount - this.defense);
     if (blocked) {
+      this.stats.blocks += 1;
+      if (perfect) this.stats.perfectBlocks += 1;
       damage *= perfect ? 0 : 0.24;
       this.stamina = Math.max(0, this.stamina - amount * (perfect ? 0.3 : 1.2));
       if (perfect) source.hitStun = Math.max(source.hitStun, 0.32);
@@ -190,6 +205,7 @@ export class Character {
       this.hitStun = 0.22 + damage * 0.008;
       this.velocity.add(this.position.clone().sub(source.position).projectOnPlane(this.up).normalize().multiplyScalar(knockback));
     }
+    if (damage > 0) source.stats.hits += 1;
     if (this.health <= 0) {
       this.alive = false;
       this.actionTimer = 0;
@@ -228,7 +244,8 @@ export class Character {
     if (this.blocking) return 'block';
     if (this.attack) return `attack${this.attack.step}`;
     if (!this.grounded) return 'jump';
-    if (movement === 2) return 'run';
+    if (this.landingTimer > 0) return 'landing';
+    if (movement === 2) return 'sprint';
     if (movement === 1) return 'walk';
     return 'idle';
   }
@@ -250,6 +267,7 @@ export class Character {
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.hitStun = Math.max(0, this.hitStun - dt);
     this.perfectBlockTimer = Math.max(0, this.perfectBlockTimer - dt);
+    this.landingTimer = Math.max(0, this.landingTimer - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.shieldTimer = Math.max(0, this.shieldTimer - dt);
     if (this.shieldTimer <= 0) this.shield = 0;

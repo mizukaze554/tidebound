@@ -5,10 +5,12 @@ const AUDIO_FILES = {
     combat: '/assets/audio/combat-music.mp3',
     victory: '/assets/audio/victory-music.mp3',
     defeat: '/assets/audio/defeat-music.mp3',
+    draw: '/assets/audio/draw-music.mp3',
   },
   sfx: {
     hit: '/assets/audio/sword-hit.mp3',
     block: '/assets/audio/block.mp3',
+    perfectBlock: '/assets/audio/perfect-block.mp3',
     skill: '/assets/audio/skill.mp3',
     ui: '/assets/audio/ui-click.mp3',
     swing: '/assets/audio/sword-swing.mp3',
@@ -34,6 +36,7 @@ export class AudioManager {
     this.currentMusic = null;
     this.currentMusicName = null;
     this.missing = new Set();
+    this.lastSfx = new Map();
   }
 
   unlock() {
@@ -70,6 +73,10 @@ export class AudioManager {
 
   playSfx(name) {
     if (!this.unlocked || this.muted) return;
+    const now = performance.now();
+    const minimumGap = name === 'footsteps' ? 90 : name === 'ui' ? 45 : 22;
+    if (now - (this.lastSfx.get(name) || 0) < minimumGap) return;
+    this.lastSfx.set(name, now);
     const file = AUDIO_FILES.sfx[name];
     if (file && !this.missing.has(`sfx:${name}`) && typeof Audio !== 'undefined') {
       const audio = new Audio(file);
@@ -88,7 +95,7 @@ export class AudioManager {
     const oscillator = this.context.createOscillator();
     const gain = this.context.createGain();
     const now = this.context.currentTime;
-    const frequencies = { hit: [100, 42], block: [180, 85], skill: [280, 620], ui: [460, 580], swing: [180, 75], dodge: [320, 120], footsteps: [75, 55], jump: [220, 340], landing: [95, 50], fire: [190, 620], water: [420, 180], wind: [640, 260], earth: [120, 48] };
+    const frequencies = { hit: [100, 42], block: [180, 85], perfectBlock: [720, 180], skill: [280, 620], ui: [460, 580], swing: [180, 75], dodge: [320, 120], footsteps: [75, 55], jump: [220, 340], landing: [95, 50], fire: [190, 620], water: [420, 180], wind: [640, 260], earth: [120, 48] };
     const [start, end] = frequencies[name] || frequencies.hit;
     oscillator.type = name === 'skill' || name === 'ui' ? 'sine' : name === 'block' ? 'square' : 'sawtooth';
     oscillator.frequency.setValueAtTime(start, now);

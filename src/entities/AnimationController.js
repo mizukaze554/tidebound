@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const STATE_WORDS = {
-  idle: ['idle'], walk: ['walk'], run: ['run', 'sprint'], jump: ['jump', 'fall'],
+  idle: ['idle'], walk: ['walk'], run: ['run'], sprint: ['sprint', 'run fast'], jump: ['jump', 'fall'], landing: ['land'],
   attack1: ['attack1', 'attack 1', 'slash1', 'slash 1'],
   attack2: ['attack2', 'attack 2', 'slash2', 'slash 2'],
   attack3: ['attack3', 'attack 3', 'slash3', 'slash 3'],
@@ -27,7 +27,7 @@ export class AnimationStateController {
     const previous = this.current;
     this.current = next;
     next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
-    if (state.startsWith('attack') || state === 'hit' || state === 'dodge' || state === 'defeat') next.setLoop(THREE.LoopOnce, 1).clampWhenFinished = true;
+    if (state.startsWith('attack') || state === 'hit' || state === 'dodge' || state === 'landing' || state === 'defeat') next.setLoop(THREE.LoopOnce, 1).clampWhenFinished = true;
     else next.setLoop(THREE.LoopRepeat, Infinity);
     previous?.crossFadeTo(next, state === 'hit' ? 0.06 : 0.16, false);
   }

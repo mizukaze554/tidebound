@@ -4,7 +4,7 @@ export class Menu {
   constructor(root, handlers) {
     this.root = root; this.handlers = handlers;
     this.main = this.make('main-menu', `
-      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon.png" alt=""><small>AN ELEMENTAL COMBAT PROTOTYPE</small></div><h1>TIDE<span>BOUND</span></h1><p>Cross a seamless generated planet. Forge your own techniques.<br>Outfight the Crimson Echo beneath changing skies.</p><div class="menu-actions"><button class="primary-button" data-start>ENTER THE WORLD <i>→</i></button><button class="ghost-button" data-skills>SKILL CREATOR</button><button class="text-button" data-settings>SETTINGS</button></div></div><div class="menu-footer"><span>v1.2 COMBAT BUILD</span><span>DETERMINISTIC STREAMING · CUSTOM ABILITIES</span></div>`);
+      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon-192.png" alt=""><small>THE LIVING DUEL</small></div><h1>TIDE<span>BOUND</span></h1><p>Shape the elements. Read your rival. Write a new legend<br>on a seamless world that remembers every technique.</p><div class="menu-actions"><button class="primary-button" data-start>ENTER THE DUEL <i>→</i></button><button class="ghost-button" data-skills>SKILL CREATOR 2.0</button><button class="ghost-button hidden" data-install>INSTALL TIDEBOUND</button><button class="text-button" data-settings>SETTINGS</button></div></div><div class="menu-footer"><span>v1.3 · THE LIVING DUEL</span><span>OFFLINE READY · CUSTOM ABILITIES</span></div>`);
     this.main.querySelector('[data-start]').addEventListener('click', (event) => {
       event.preventDefault();
       this.showCharacter();
@@ -50,11 +50,11 @@ export class Menu {
     this.pause.querySelector('[data-skills]').onclick = handlers.skills;
     this.pause.querySelector('[data-settings]').onclick = () => this.showSettings();
 
-    this.result = this.make('result-screen hidden', `<div class="result-panel panel-cut"><small data-kicker>THE CURRENT SETTLES</small><h2 data-title>VICTORY</h2><p data-copy></p><div class="result-stats"><div><strong data-dealt>0</strong><span>DAMAGE DEALT</span></div><div><strong data-received>0</strong><span>DAMAGE RECEIVED</span></div><div><strong data-used>0</strong><span>SKILLS USED</span></div></div><button class="primary-button" data-restart>FIGHT AGAIN</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
+    this.result = this.make('result-screen hidden', `<div class="result-panel panel-cut"><small data-kicker>THE CURRENT SETTLES</small><h2 data-title>VICTORY</h2><p data-copy></p><div class="result-stats"><div><strong data-duration>00:00</strong><span>DUEL TIME</span></div><div><strong data-dealt>0</strong><span>DAMAGE DEALT</span></div><div><strong data-received>0</strong><span>DAMAGE RECEIVED</span></div><div><strong data-hits>0</strong><span>HITS</span></div><div><strong data-blocks>0</strong><span>BLOCKS</span></div><div><strong data-dodges>0</strong><span>DODGES</span></div><div><strong data-used>0</strong><span>SKILLS USED</span></div></div><button class="primary-button" data-restart>FIGHT AGAIN</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
     this.result.querySelector('[data-restart]').onclick = handlers.restart;
     this.result.querySelector('[data-main]').onclick = handlers.main;
 
-    this.settings = this.make('settings-screen hidden', `<div class="settings-panel panel-cut"><button class="icon-button" data-close>×</button><small>SYSTEM / COMBAT</small><h2>SETTINGS</h2><label><span>AI DIFFICULTY</span><select data-difficulty><option value="easy">Easy — forgiving</option><option value="normal" selected>Normal — balanced</option><option value="hard">Hard — aggressive</option></select></label><label><span>GRAPHICS PRESET</span><select data-graphics><option value="high">High</option><option value="balanced" selected>Medium</option><option value="low">Low</option></select></label><label><span>RENDER SCALE</span><select data-scale><option value="1">Native</option><option value="0.8" selected>Balanced</option><option value="0.65">Performance</option></select></label><label><span>MOUSE SENSITIVITY <output data-sensitivity-output>100%</output></span><input data-sensitivity type="range" min="40" max="180" value="100"></label><label><span>MUSIC VOLUME <output data-music-output>45%</output></span><input data-music type="range" min="0" max="100" value="45"></label><label><span>SFX VOLUME <output data-sfx-output>70%</output></span><input data-sfx type="range" min="0" max="100" value="70"></label><label class="toggle-setting"><span>MUTE ALL</span><input data-mute type="checkbox"></label><button type="button" class="ghost-button fullscreen-button" data-fullscreen>TOGGLE FULLSCREEN</button><p>Audio begins after the first click due to browser autoplay restrictions.</p></div>`);
+    this.settings = this.make('settings-screen hidden', `<div class="settings-panel panel-cut"><button class="icon-button" data-close>×</button><small>SYSTEM / COMBAT</small><h2>SETTINGS</h2><label><span>AI DIFFICULTY</span><select data-difficulty><option value="easy">Easy — forgiving</option><option value="normal" selected>Normal — balanced</option><option value="hard">Hard — aggressive</option></select></label><label><span>GRAPHICS PRESET</span><select data-graphics><option value="high">High</option><option value="balanced" selected>Medium</option><option value="low">Low</option></select></label><label><span>RENDER SCALE</span><select data-scale><option value="1">Native</option><option value="0.8" selected>Balanced</option><option value="0.65">Performance</option></select></label><label><span>CAMERA SENSITIVITY <output data-sensitivity-output>100%</output></span><input data-sensitivity type="range" min="40" max="180" value="100"></label><label><span>MUSIC VOLUME <output data-music-output>45%</output></span><input data-music type="range" min="0" max="100" value="45"></label><label><span>SFX VOLUME <output data-sfx-output>70%</output></span><input data-sfx type="range" min="0" max="100" value="70"></label><label class="toggle-setting"><span>CAMERA SHAKE</span><input data-shake type="checkbox" checked></label><label class="toggle-setting"><span>PERFORMANCE DISPLAY</span><input data-performance type="checkbox"></label><label class="toggle-setting"><span>MUTE ALL</span><input data-mute type="checkbox"></label><button type="button" class="ghost-button fullscreen-button" data-fullscreen>TOGGLE FULLSCREEN</button><p>Audio begins after the first interaction. Mobile devices start with a conservative graphics preset.</p></div>`);
     this.settings.querySelector('[data-close]').onclick = () => this.settings.classList.add('hidden');
     this.settings.querySelector('[data-difficulty]').onchange = (e) => handlers.difficulty(e.target.value);
     this.settings.querySelector('[data-scale]').onchange = (e) => handlers.scale(Number(e.target.value));
@@ -63,6 +63,8 @@ export class Menu {
     this.settings.querySelector('[data-sfx]').oninput = (e) => { this.settings.querySelector('[data-sfx-output]').textContent = `${e.target.value}%`; handlers.sfx(Number(e.target.value) / 100); };
     this.settings.querySelector('[data-mute]').onchange = (e) => handlers.mute(e.target.checked);
     this.settings.querySelector('[data-sensitivity]').oninput = (e) => { this.settings.querySelector('[data-sensitivity-output]').textContent = `${e.target.value}%`; handlers.sensitivity(Number(e.target.value) / 100); };
+    this.settings.querySelector('[data-shake]').onchange = (e) => handlers.shake(e.target.checked);
+    this.settings.querySelector('[data-performance]').onchange = (e) => handlers.performance(e.target.checked);
     this.settings.querySelector('[data-fullscreen]').onclick = handlers.fullscreen;
   }
 
@@ -86,7 +88,16 @@ export class Menu {
     this.settings.querySelector('[data-sfx-output]').textContent = `${sfx.value}%`;
     this.settings.querySelector('[data-mute]').checked = audio.muted;
   }
-  showResult(outcome, stats) {
+  setGameSettings({ graphics, sensitivity, shake, performance }) {
+    this.settings.querySelector('[data-graphics]').value = graphics;
+    this.settings.querySelector('[data-sensitivity]').value = Math.round(sensitivity * 100);
+    this.settings.querySelector('[data-sensitivity-output]').textContent = `${Math.round(sensitivity * 100)}%`;
+    this.settings.querySelector('[data-shake]').checked = shake;
+    this.settings.querySelector('[data-performance]').checked = performance;
+  }
+  configureInstall(label, handler) { const button = this.main.querySelector('[data-install]'); button.textContent = label; button.onclick = handler; button.classList.remove('hidden'); }
+  hideInstall() { this.main.querySelector('[data-install]').classList.add('hidden'); }
+  showResult(outcome, stats, duration = 0) {
     const title = { victory: 'VICTORY', defeat: 'DEFEAT', draw: 'DRAW' }[outcome] || 'DRAW';
     this.result.querySelector('[data-title]').textContent = title;
     this.result.querySelector('[data-title]').className = outcome;
@@ -94,6 +105,10 @@ export class Menu {
     this.result.querySelector('[data-dealt]').textContent = Math.round(stats.dealt);
     this.result.querySelector('[data-received]').textContent = Math.round(stats.received);
     this.result.querySelector('[data-used]').textContent = stats.skills;
+    this.result.querySelector('[data-hits]').textContent = stats.hits;
+    this.result.querySelector('[data-blocks]').textContent = stats.blocks;
+    this.result.querySelector('[data-dodges]').textContent = stats.dodges;
+    this.result.querySelector('[data-duration]').textContent = `${String(Math.floor(duration / 60)).padStart(2, '0')}:${String(Math.floor(duration % 60)).padStart(2, '0')}`;
     this.show(this.result);
   }
 

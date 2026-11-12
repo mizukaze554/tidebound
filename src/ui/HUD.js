@@ -22,13 +22,13 @@ export class HUD {
       <div class="target-reticle" data-reticle><i></i><i></i><i></i><i></i></div>
       <div class="combat-message" data-message></div>
       <div class="bottom-hud">
-        <div class="controls-card"><b>COMBAT INPUT</b><span>WASD Move · Shift Sprint · Space Jump</span><span>LMB Combo · RMB Guard · Q Evade · Tab Lock</span></div>
+        <div class="controls-card"><b>COMBAT INPUT</b><span>WASD Move · Shift Sprint · Space Jump</span><span>LMB Combo · X Heavy · RMB Guard · Q Evade · Tab Lock</span></div>
         <div class="skill-dock" data-skills></div>
-        <div class="fps"><b data-fps>60</b><span>FPS</span></div>
+        <div class="performance-panel hidden" data-performance-panel><b><i data-fps>60</i> FPS</b><span><i data-draws>0</i> DRAWS</span><span><i data-triangles>0</i> TRIS</span><span><i data-particles>0</i> FX</span></div>
       </div>`;
     root.append(this.el);
     this.refs = Object.fromEntries(
-      [...this.el.querySelectorAll('[data-player-health], [data-player-health-text], [data-player-stamina], [data-player-energy], [data-enemy-health], [data-enemy-health-text], [data-ai-state], [data-fps], [data-skills], [data-reticle], [data-message], [data-timer]')]
+      [...this.el.querySelectorAll('[data-player-health], [data-player-health-text], [data-player-stamina], [data-player-energy], [data-enemy-health], [data-enemy-health-text], [data-ai-state], [data-fps], [data-draws], [data-triangles], [data-particles], [data-performance-panel], [data-skills], [data-reticle], [data-message], [data-timer]')]
         .map((el) => [Object.keys(el.dataset)[0], el]),
     );
     this.fpsTime = 0; this.frames = 0; this.messageTimer = null;
@@ -36,6 +36,7 @@ export class HUD {
 
   show() { this.el.classList.remove('hidden'); animate(this.el, { opacity: [0, 1], duration: 450 }); }
   hide() { this.el.classList.add('hidden'); }
+  setPerformanceVisible(value) { this.refs.performancePanel.classList.toggle('hidden', !value); }
 
   setSkills(skills) {
     this.refs.skills.replaceChildren();
@@ -63,7 +64,7 @@ export class HUD {
     this.messageTimer = setTimeout(() => this.refs.message.classList.remove('show'), 1300);
   }
 
-  update(player, enemy, aiState, skills, dt, locked, timeLeft, world = null) {
+  update(player, enemy, aiState, skills, dt, locked, timeLeft, world = null, renderer = null, effects = null) {
     const percent = (value, max) => `${Math.max(0, value / max * 100)}%`;
     this.refs.playerHealth.style.width = percent(player.health, player.maxHealth);
     this.refs.playerHealthText.textContent = `${Math.ceil(player.health)} / ${player.maxHealth}`;
@@ -90,6 +91,14 @@ export class HUD {
       slot.classList.toggle('cooling', remaining > 0);
     });
     this.frames++; this.fpsTime += dt;
-    if (this.fpsTime >= 0.5) { this.refs.fps.textContent = Math.round(this.frames / this.fpsTime); this.fpsTime = 0; this.frames = 0; }
+    if (this.fpsTime >= 0.5) {
+      this.refs.fps.textContent = Math.round(this.frames / this.fpsTime);
+      this.refs.draws.textContent = renderer?.info.render.calls ?? 0;
+      this.refs.triangles.textContent = this.compact(renderer?.info.render.triangles ?? 0);
+      this.refs.particles.textContent = effects?.activeParticles ?? 0;
+      this.fpsTime = 0; this.frames = 0;
+    }
   }
+
+  compact(value) { return value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${(value / 1000).toFixed(1)}K` : String(value); }
 }

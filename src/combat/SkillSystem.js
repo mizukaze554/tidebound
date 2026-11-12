@@ -31,16 +31,22 @@ export class SkillSystem {
     for (const key of ['power', 'range', 'speed', 'duration']) {
       if (!Number.isFinite(Number(skill[key])) || Number(skill[key]) < 1 || Number(skill[key]) > 10) return `${key} must be from 1 to 10.`;
     }
+    if (!Number.isInteger(Number(skill.projectileCount ?? 1)) || Number(skill.projectileCount ?? 1) < 1 || Number(skill.projectileCount ?? 1) > 5) return 'projectileCount must be from 1 to 5.';
+    if (!Number.isFinite(Number(skill.spread ?? 0)) || Number(skill.spread ?? 0) < 0 || Number(skill.spread ?? 0) > 35) return 'spread must be from 0 to 35.';
+    if (!Number.isFinite(Number(skill.knockback ?? 5)) || Number(skill.knockback ?? 5) < 1 || Number(skill.knockback ?? 5) > 10) return 'knockback must be from 1 to 10.';
+    if (!Number.isFinite(Number(skill.castTime ?? 0)) || Number(skill.castTime ?? 0) < 0 || Number(skill.castTime ?? 0) > 1.5) return 'castTime must be from 0 to 1.5.';
     return null;
   }
 
   static cost(skill) {
     const shape = { Self: 2, Projectile: 5, Area: 9, Beam: 12 }[skill.shape] || 0;
     const effect = { Damage: 4, Push: 3, Pull: 4, Shield: 7, Heal: 8 }[skill.effect] || 0;
-    return Math.round(8 + shape + effect + skill.power * 1.75 + skill.range * 0.55 + skill.duration * 0.8 + skill.speed * 0.25);
+    return Math.round(8 + shape + effect + skill.power * 1.75 + skill.range * 0.55 + skill.duration * 0.8 + skill.speed * 0.25
+      + (Number(skill.projectileCount ?? 1) - 1) * 4 + Number(skill.spread ?? 0) * 0.08 + Number(skill.knockback ?? 5) * 0.35
+      - Number(skill.castTime ?? 0) * 3);
   }
 
-  static cooldown(skill) { return 2.2 + skill.power * 0.18 + skill.duration * 0.2 + (skill.shape === 'Area' ? 0.8 : 0); }
+  static cooldown(skill) { return 2.2 + skill.power * 0.18 + skill.duration * 0.2 + (skill.shape === 'Area' ? 0.8 : 0) + (Number(skill.projectileCount ?? 1) - 1) * 0.22; }
 
   static range(skill) { return Number(skill.range); }
 
@@ -57,12 +63,34 @@ export class SkillSystem {
     caster.face(direction);
     const color = ELEMENTS[skill.element].color;
 
-    if (skill.shape === 'Self') this.self(caster, skill, direction, color);
-    else if (skill.shape === 'Projectile') this.projectile(caster, target, skill, direction, color);
-    else if (skill.shape === 'Area') this.area(caster, target, skill, color);
-    else if (skill.shape === 'Beam') this.beam(caster, target, skill, direction, color);
+    const castTime = Number(skill.castTime ?? 0);
+    if (castTime > 0) {
+      caster.actionTimer = Math.max(caster.actionTimer, castTime);
+      const mesh = new THREE.Mesh(
+        new THREE.RingGeometry(0.55, 0.7, 30),
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false }),
+      );
+      mesh.position.copy(caster.position).addScaledVector(caster.up, 0.08);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), caster.up);
+      this.scene.add(mesh);
+      this.active.push({ type: 'cast', mesh, caster, target, skill, direction, color, elapsed: 0, duration: castTime });
+    } else this.execute(caster, target, skill, direction, color);
     this.effects.sound(skill.element.toLowerCase());
     return { ok: true, cost };
+  }
+
+  execute(caster, target, skill, direction, color) {
+    if (!caster.alive) return;
+    if (skill.shape === 'Self') this.self(caster, skill, direction, color);
+    else if (skill.shape === 'Projectile') {
+      const count = Number(skill.projectileCount ?? 1);
+      const spread = THREE.MathUtils.degToRad(Number(skill.spread ?? 0));
+      for (let i = 0; i < count; i++) {
+        const offset = count === 1 ? 0 : THREE.MathUtils.lerp(-spread / 2, spread / 2, i / (count - 1));
+        this.projectile(caster, target, skill, direction.clone().applyAxisAngle(caster.up, offset), color, 1 / Math.sqrt(count));
+      }
+    } else if (skill.shape === 'Area') this.area(caster, target, skill, color);
+    else if (skill.shape === 'Beam') this.beam(caster, target, skill, direction, color);
   }
 
   self(caster, skill, direction, color) {
@@ -82,15 +110,17 @@ export class SkillSystem {
     }
   }
 
-  projectile(caster, target, skill, direction, color) {
+  projectile(caster, target, skill, direction, color, damageScale = 1) {
     const radius = 0.22 + skill.power * 0.025;
     const geometry = skill.element === 'Earth' ? new THREE.DodecahedronGeometry(radius, 0) : new THREE.SphereGeometry(radius, 10, 8);
     const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 2, roughness: 0.2 });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(caster.position).addScaledVector(caster.up, 1.5).addScaledVector(direction, 0.9);
     mesh.castShadow = true;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.5, radius * 0.08, 5, 18), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7, depthWrite: false }));
+    halo.rotation.x = Math.PI / 2; mesh.add(halo);
     this.scene.add(mesh);
-    this.active.push({ type: 'projectile', mesh, previousPosition: mesh.position.clone(), caster, target, skill, direction, color, distance: 0, hit: false, radius });
+    this.active.push({ type: 'projectile', mesh, previousPosition: mesh.position.clone(), caster, target, skill, direction, color, distance: 0, hit: false, radius, damageScale, trailTimer: 0 });
   }
 
   area(caster, target, skill, color) {
@@ -125,7 +155,7 @@ export class SkillSystem {
     this.active.push({ type: 'beam', mesh, elapsed: 0, duration: 0.18 + skill.duration * 0.045 });
   }
 
-  applyEffect(caster, target, skill, direction, color) {
+  applyEffect(caster, target, skill, direction, color, damageScale = 1) {
     if (skill.effect === 'Heal') {
       const amount = caster.heal(skill.power * 3.5 + skill.duration);
       this.effects.heal(caster, color);
@@ -135,7 +165,8 @@ export class SkillSystem {
     if (!target?.alive) return;
     if (skill.effect === 'Damage') {
       const multiplier = skill.element === 'Fire' ? 1.18 : 1;
-      const result = target.takeDamage((8 + skill.power * 3.2) * multiplier, caster, 1.6 + skill.power * 0.25, skill.element);
+      const knockback = 0.7 + Number(skill.knockback ?? 5) * 0.35;
+      const result = target.takeDamage((8 + skill.power * 3.2) * multiplier * damageScale, caster, knockback, skill.element);
       if (result.hit) {
         this.effects.impact(target.position, color, result.blocked);
         this.effects.damageNumber(target.position, result.damage, result.blocked);
@@ -144,7 +175,7 @@ export class SkillSystem {
     } else if (skill.effect === 'Push' || skill.effect === 'Pull') {
       const away = target.position.clone().sub(caster.position).projectOnPlane(caster.up).normalize();
       const sign = skill.effect === 'Pull' ? -1 : 1;
-      const strength = (2.5 + skill.power * 0.55) * sign;
+      const strength = (1.2 + Number(skill.knockback ?? 5) * 0.55 + skill.power * 0.2) * sign;
       target.position.addScaledVector(away, strength);
       target.hitStun = Math.max(target.hitStun, 0.18 + skill.power * 0.02);
       this.effects.impact(target.position, color, false);
@@ -155,12 +186,23 @@ export class SkillSystem {
     for (let i = this.active.length - 1; i >= 0; i--) {
       const item = this.active[i];
       let remove = false;
-      if (item.type === 'projectile') {
+      if (item.type === 'cast') {
+        item.elapsed += dt;
+        const progress = Math.min(1, item.elapsed / item.duration);
+        item.mesh.position.copy(item.caster.position).addScaledVector(item.caster.up, 0.08);
+        item.mesh.scale.setScalar(1 + progress * 1.4);
+        item.mesh.rotation.z += dt * 4;
+        item.mesh.material.opacity = 0.75 * (1 - progress * 0.55);
+        if (!item.caster.alive) remove = true;
+        else if (progress >= 1) { this.execute(item.caster, item.target, item.skill, item.direction, item.color); remove = true; }
+      } else if (item.type === 'projectile') {
         const speed = 6 + item.skill.speed * 1.25 + (item.skill.element === 'Wind' ? 3 : 0);
         const travel = Math.min(speed * dt, SkillSystem.range(item.skill) - item.distance);
         item.previousPosition.copy(item.mesh.position);
         item.mesh.position.addScaledVector(item.direction, travel);
         item.mesh.rotation.x += dt * 6; item.mesh.rotation.y += dt * 9;
+        item.trailTimer -= dt;
+        if (item.trailTimer <= 0) { this.effects.elementTrail(item.mesh.position, item.direction, item.color, item.skill.element); item.trailTimer = 0.075; }
         item.distance += travel;
         const hitbox = item.target?.getBodyHitbox?.(item.target.previousPosition);
         const targetDelta = item.target?.position.clone().sub(item.target.previousPosition);
@@ -174,7 +216,8 @@ export class SkillSystem {
           hitbox.radius,
         )) {
           item.hit = true;
-          this.applyEffect(item.caster, item.target, item.skill, item.direction, item.color);
+          this.applyEffect(item.caster, item.target, item.skill, item.direction, item.color, item.damageScale);
+          this.effects.elementBurst(item.target.position, item.color, item.skill.element);
           remove = true;
         }
         if (item.distance >= SkillSystem.range(item.skill)) remove = true;
@@ -202,8 +245,14 @@ export class SkillSystem {
   remove(index) {
     const item = this.active[index];
     this.scene.remove(item.mesh);
-    item.mesh.geometry.dispose();
-    item.mesh.material.dispose();
+    const geometries = new Set(); const materials = new Set();
+    item.mesh.traverse((object) => {
+      if (!object.isMesh) return;
+      if (object.geometry) geometries.add(object.geometry);
+      (Array.isArray(object.material) ? object.material : [object.material]).filter(Boolean).forEach((material) => materials.add(material));
+    });
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
     this.active.splice(index, 1);
   }
 

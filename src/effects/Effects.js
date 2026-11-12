@@ -8,6 +8,7 @@ export class Effects {
     this.uiRoot = uiRoot;
     this.items = [];
     this.audioManager = audioManager;
+    this.particleScale = 0.75;
   }
 
   sound(type = 'hit') {
@@ -28,6 +29,10 @@ export class Effects {
   }
 
   add(mesh, life, update) {
+    if (this.items.length >= Math.round(180 * this.particleScale)) {
+      const oldest = this.items.shift();
+      if (oldest) this.disposeItem(oldest);
+    }
     this.scene.add(mesh);
     this.items.push({ mesh, life, maxLife: life, update });
     return mesh;
@@ -77,10 +82,10 @@ export class Effects {
     this.sound(blocked ? 'block' : 'hit');
   }
 
-  blockBurst(character) {
+  blockBurst(character, perfect = false) {
     const mesh = new THREE.Mesh(
       new THREE.RingGeometry(0.7, 0.92, 32),
-      new THREE.MeshBasicMaterial({ color: 0xbcefff, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ color: perfect ? 0xffe6a4 : 0xbcefff, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }),
     );
     mesh.position.copy(character.position).addScaledVector(character.up, 1.45).addScaledVector(character.facing, 0.7);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), character.facing);
@@ -88,7 +93,46 @@ export class Effects {
       item.mesh.scale.multiplyScalar(1 + dt * 8);
       item.mesh.material.opacity = item.life / item.maxLife;
     });
+    if (perfect) this.sound('perfectBlock');
   }
+
+  elementTrail(position, direction, color, element) {
+    if (this.particleScale < 0.5 && Math.random() > 0.45) return;
+    const geometry = element === 'Earth' ? new THREE.TetrahedronGeometry(0.09, 0) : new THREE.SphereGeometry(0.055, 5, 4);
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.65, depthWrite: false }));
+    mesh.position.copy(position).addScaledVector(direction, -0.18);
+    const drift = new THREE.Vector3().randomDirection().multiplyScalar(element === 'Fire' ? 0.7 : 0.35);
+    this.add(mesh, 0.26, (item, dt) => {
+      item.mesh.position.addScaledVector(drift, dt);
+      item.mesh.scale.multiplyScalar(Math.max(0.9, 1 - dt * 1.8));
+      item.mesh.material.opacity = 0.65 * item.life / item.maxLife;
+    });
+  }
+
+  elementBurst(position, color, element) {
+    const group = new THREE.Group();
+    const up = position.clone().normalize();
+    group.position.copy(position).addScaledVector(up, 1.3);
+    const count = Math.max(4, Math.round(12 * this.particleScale));
+    const geometry = element === 'Earth' ? new THREE.TetrahedronGeometry(0.12, 0) : new THREE.SphereGeometry(0.07, 5, 4);
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthWrite: false });
+    for (let i = 0; i < count; i++) {
+      const particle = new THREE.Mesh(geometry, material.clone());
+      particle.userData.velocity = new THREE.Vector3().randomDirection().addScaledVector(up, 0.5).multiplyScalar(1.5 + Math.random() * 2.5);
+      group.add(particle);
+    }
+    if (element === 'Water' || element === 'Wind') {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.045, 5, 24), material.clone());
+      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), up); ring.userData.ring = true; group.add(ring);
+    }
+    this.add(group, 0.48, (item, dt) => item.mesh.children.forEach((particle) => {
+      if (particle.userData.ring) particle.scale.multiplyScalar(1 + dt * 7);
+      else particle.position.addScaledVector(particle.userData.velocity, dt);
+      particle.material.opacity = item.life / item.maxLife;
+    }));
+  }
+
+  setQuality(preset) { this.particleScale = ({ low: 0.42, balanced: 0.75, high: 1 }[preset] || 0.75); }
 
   barrier(character, color, duration) {
     const mesh = new THREE.Mesh(
@@ -150,4 +194,6 @@ export class Effects {
     for (const item of this.items) this.disposeItem(item);
     this.items.length = 0;
   }
+
+  get activeParticles() { return this.items.reduce((total, item) => total + Math.max(1, item.mesh.children?.length || 0), 0); }
 }
