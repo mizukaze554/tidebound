@@ -17,6 +17,7 @@ import { CatalogSkillSystem } from '../combat/CatalogSkillSystem.js';
 import { WorldSlice } from '../world/WorldSlice.js';
 import { worldCatalog } from '../data/WorldCatalog.js';
 import { Monster } from '../entities/Monster.js';
+import { applyReferenceCharacterModel } from '../entities/ReferenceCharacterModel.js';
 import { AudioManager } from './AudioManager.js';
 import { resolveMatchOutcome } from '../combat/MatchRules.js';
 import { MobileControls } from '../ui/MobileControls.js';
@@ -126,7 +127,7 @@ export class Game {
     this.hud.setPerformanceVisible(performanceVisible);
     this.setGraphics(preset);
     this.menu.setGameSettings({ graphics: preset, sensitivity: this.followCamera.sensitivity, shake: this.followCamera.shakeEnabled, performance: performanceVisible });
-    const unlockAudio = () => { this.audio.unlock(); this.audio.playMusic(this.state === 'playing' ? 'combat' : 'menu'); };
+    const unlockAudio = () => { this.audio.unlock(); if (this.state === 'playing') this.audio.playMusic(this.mode === 'explore' ? 'exploration' : 'combat'); };
     window.addEventListener('pointerdown', unlockAudio, { once: true });
     window.addEventListener('keydown', unlockAudio, { once: true });
     this.uiRoot.addEventListener('click', (event) => { if (event.target.closest('button')) this.audio.playSfx('ui'); });
@@ -154,11 +155,11 @@ export class Game {
     this.catalogCombat.clear();
     const spawn = this.world.spawnPositions();
     this.player = new Character(this.scene, { color: 0x267bb4, accent: 0x5ee3ff, name: 'Wayfarer', position: spawn.player, gender: this.gender });
+    applyReferenceCharacterModel(this.player, this.gender);
     this.applyEquipment();
     this.enemy = mode === 'duel' ? new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true }) : null;
-    const player = this.player, enemy = this.enemy;
+    const enemy = this.enemy;
     this.modelLoaderPromise.then((loader) => {
-      if (this.player === player) loader.applyToCharacter(player, `/assets/models/wayfarer-${this.gender}.glb`);
       if (enemy && this.enemy === enemy) loader.applyToCharacter(enemy, '/assets/models/crimson-echo.glb');
     });
     this.world.updateUp(this.player);
@@ -176,8 +177,9 @@ export class Game {
     this.state = 'playing'; this.input.enabled = true; this.input.reset();
     this.menu.hideAll(); this.menu.settings.classList.add('hidden'); this.menu.help.classList.add('hidden');
     this.hud.setSkills(this.skills);
-    if (mode === 'duel') { this.exploreHud.classList.add('hidden'); this.hud.show(); this.hud.message('DUEL BEGIN', 'good'); }
-    else { this.hud.hide(); this.exploreHud.classList.remove('hidden'); }
+    this.hud.show();
+    if (mode === 'duel') { this.exploreHud.classList.add('hidden'); this.hud.message('DUEL BEGIN', 'good'); }
+    else this.exploreHud.classList.remove('hidden');
     if (mode === 'explore') this.spawnMonsters();
     this.mobileControls.show();
     this.audio.playMusic(mode === 'duel' ? 'combat' : 'exploration');
@@ -281,9 +283,9 @@ export class Game {
     if (this.input.down('KeyA')) move.sub(this.followCamera.right());
     if (this.input.consume('Space') && this.player.jump()) this.audio.playSfx('jump');
     if (this.input.consume('KeyQ') && this.player.dodge(move)) { this.audio.playSfx('dodge'); this.effects.windTrail(this.player.position, move.lengthSq() ? move.clone().normalize() : this.player.facing.clone().negate(), 0xa5ffd8); if (this.mode === 'explore') { const p = this.discoveryState.progress; p.dodges = (p.dodges || 0) + 1; if (p.dodges % 5 === 0) this.tryDiscovery('skill', 'step'); } }
-    if (this.input.consume('Mouse0') && this.player.startAttack()) this.audio.playSfx('swing');
+    if ((this.input.consume('Mouse0') || this.input.consume('KeyC')) && this.player.startAttack()) this.audio.playSfx('swing');
     if (this.input.consume('KeyX') && this.player.startHeavyAttack()) { this.audio.playSfx('swing'); this.hud.message('HEAVY CURRENT', 'good'); }
-    this.player.setBlock(this.input.button(2));
+    this.player.setBlock(this.input.button(2) || this.input.down('KeyV'));
     if (this.input.consume('KeyE')) this.useSkill(this.player, 0);
     if (this.input.consume('KeyR')) this.useSkill(this.player, 1);
     if (this.input.consume('KeyF')) this.useSkill(this.player, 2);
@@ -319,6 +321,7 @@ export class Game {
       }
       this.catalogCombat.update(dt);
       this.updateMonsters(dt);
+      this.hud.update(this.player, null, '', this.skills, dt, false, 0, this.world, this.renderer, this.effects);
       this.exploreHud.querySelector('[data-vitals]').textContent = `${Math.ceil(this.player.health)} HP · ${Math.ceil(this.player.energy)} EN`;
       this.worldSlice.updatePreview(this.player, this.followCamera.forward());
       this.effects.update(dt);
@@ -442,10 +445,8 @@ export class Game {
       monster.update(dt, movement);
       this.world.constrain(monster);
       if (!monster.alive) { this.onDamage(monster, { hit: true, damage: 2 }); continue; }
-      if (member.aggro) {
-        this.combat.update(monster, this.player);
-        this.combat.update(this.player, monster);
-      }
+      if (member.aggro) this.combat.update(monster, this.player);
+      if (distance < 5) this.combat.update(this.player, monster);
     }
     this.monsterRespawn -= dt;
     if (this.monsterRespawn <= 0 && (!living || this.monsters.every((entry) => entry.character.position.distanceTo(this.player.position) > 55))) this.spawnMonsters();
@@ -480,13 +481,13 @@ export class Game {
     document.exitPointerLock?.(); this.hud.hide();
     this.mobileControls.hide();
     this.menu.showResult(outcome, this.player.stats, this.matchElapsed);
-    this.audio.playMusic({ victory: 'victory', defeat: 'defeat', draw: 'draw' }[outcome] || 'draw');
+    this.audio.stopMusic();
   }
 
   togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
-  pause() { this.state = 'paused'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.menu.showPause(); }
-  resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.mobileControls.show(); this.menu.hideAll(); this.clock.getDelta(); }
-  returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.hud.hide(); this.exploreHud.classList.add('hidden'); this.uiRoot.classList.remove('exploring'); this.world.setCreaturesVisible(false); this.cancelBuild(); this.journal.close(); if (this.discoveryState) this.discoveryStorage.save(this.discoveryState); this.clearCharacters(); this.skillSystem?.clear?.(); this.catalogCombat.clear(); this.effects?.clear?.(); this.audio.playMusic('menu'); this.menu.help.classList.add('hidden'); this.menu.showMain(); }
+  pause() { this.state = 'paused'; this.input.enabled = false; this.mobileControls.hide(); this.audio.stopMusic(); document.exitPointerLock?.(); this.menu.showPause(); }
+  resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.mobileControls.show(); this.menu.hideAll(); this.audio.playMusic(this.mode === 'explore' ? 'exploration' : 'combat'); this.clock.getDelta(); }
+  returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); this.audio.stopMusic(); document.exitPointerLock?.(); this.hud.hide(); this.exploreHud.classList.add('hidden'); this.uiRoot.classList.remove('exploring'); this.world.setCreaturesVisible(false); this.cancelBuild(); this.journal.close(); if (this.discoveryState) this.discoveryStorage.save(this.discoveryState); this.clearCharacters(); this.skillSystem?.clear?.(); this.catalogCombat.clear(); this.effects?.clear?.(); this.menu.help.classList.add('hidden'); this.menu.showMain(); }
 
   setGraphics(preset) {
     const settings = { high: { scale: 1, shadows: true }, balanced: { scale: 0.8, shadows: true }, low: { scale: 0.65, shadows: false } }[preset] || { scale: 0.8, shadows: true };

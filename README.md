@@ -20,14 +20,14 @@ TIDEBOUND is an offline, single-player Three.js world. Choose an appearance, exp
 | G / Gather button | Gather a nearby resource |
 | J / Journal button | Open the Discovery Journal |
 | B | Open discovered blueprints |
-| Left click / attack button | Attack |
+| Left click or C / attack button | Attack |
 | X | Heavy attack |
-| Right click / block button | Block |
+| Right click or hold V / block button | Block |
 | Q / dodge button | Dodge |
 | E, R, F / skill buttons | Use equipped skills |
 | Esc / pause button | Pause |
 
-Music starts after a tap or key press. Volume and AI difficulty are available in Settings. Mobile play uses landscape orientation.
+The supplied action track plays during exploration after a tap or key press. Music stops on the title screen, pause screen, and results screen. Volume and AI difficulty are available in Settings. Mobile play uses landscape orientation.
 
 ## Catalogs and saves
 
@@ -60,8 +60,8 @@ npm run preview
 
 ## Current limits
 
-The first playable grassland and three starter structures are implemented and tested. Coast and mountain resource nodes additionally unlock a dirt road and a watchtower. The remaining world specifications and recipes are validated and can be selected by the seeded spawner or discovered through later harvesting, but many resource types, utility-item actions, automated settlements, and polished artwork are not yet implemented. Water features and caves use the supplied placeholder meshes; continuous rivers and enterable caves are not implemented. Wildling sight uses range and facing rather than terrain occlusion. Offline localStorage saves can be modified by the player and are not suitable for competitive multiplayer.
+The first playable grassland and three starter structures are implemented and tested. Coast and mountain resource nodes additionally unlock a dirt road and a watchtower. The remaining world specifications and recipes are validated and can be selected by the seeded spawner or discovered through later harvesting, but many resource types, utility-item actions, automated settlements, and polished artwork are not yet implemented. Water features and caves use the supplied placeholder meshes; continuous rivers and enterable caves are not implemented. The male and female characters are animated 3D mesh interpretations of the supplied portraits, not detailed sculpted replicas or GLB models. Wildling sight uses range and facing rather than terrain occlusion. Offline localStorage saves can be modified by the player and are not suitable for competitive multiplayer.
 
 ## License
 
-Released under [MIT](./LICENSE). The bundled music is original and generated from [tools/generate_music.py](./tools/generate_music.py). See [ASSETS.md](./ASSETS.md) for media details.
+Released under [MIT](./LICENSE). Most bundled music is generated from [tools/generate_music.py](./tools/generate_music.py); the exploration track and character portraits were supplied by the project owner. See [ASSETS.md](./ASSETS.md) for media details.

@@ -34,6 +34,7 @@ export class AudioManager {
     this.unlocked = false;
     this.context = null;
     this.currentMusic = null;
+    this.previousMusic = null;
     this.currentMusicName = null;
     this.missing = new Set();
     this.lastSfx = new Map();
@@ -44,7 +45,7 @@ export class AudioManager {
     this.unlocked = true;
     const Context = globalThis.AudioContext || globalThis.webkitAudioContext;
     if (Context) { this.context ||= new Context(); this.context.resume?.(); }
-    this.playMusic(this.currentMusicName || 'menu');
+    if (this.currentMusicName) this.playMusic(this.currentMusicName);
   }
 
   playMusic(name) {
@@ -52,6 +53,7 @@ export class AudioManager {
     if (!this.unlocked || this.missing.has(`music:${name}`) || typeof Audio === 'undefined') return;
     if (this.currentMusic?.dataset.track === name) return;
     const previous = this.currentMusic;
+    this.previousMusic = previous;
     const audio = new Audio(AUDIO_FILES.music[name]);
     audio.dataset.track = name;
     audio.loop = true;
@@ -62,13 +64,23 @@ export class AudioManager {
     audio.play().then(() => {
       const started = performance.now();
       const fade = () => {
+        if (this.currentMusic !== audio) { audio.pause(); return; }
         const progress = Math.min(1, (performance.now() - started) / 650);
         audio.volume = this.muted ? 0 : this.musicVolume * progress;
         if (previous) previous.volume = this.muted ? 0 : this.musicVolume * (1 - progress);
-        if (progress < 1) requestAnimationFrame(fade); else previous?.pause();
+        if (progress < 1) requestAnimationFrame(fade);
+        else { previous?.pause(); if (this.previousMusic === previous) this.previousMusic = null; }
       };
       fade();
     }).catch(() => { /* unlock or optional file may be unavailable */ });
+  }
+
+  stopMusic() {
+    this.currentMusic?.pause();
+    this.previousMusic?.pause();
+    this.currentMusic = null;
+    this.previousMusic = null;
+    this.currentMusicName = null;
   }
 
   playSfx(name) {

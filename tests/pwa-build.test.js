@@ -4,8 +4,9 @@ import { readFile, stat } from 'node:fs/promises';
 
 test('production PWA precaches hashed application assets and supports controlled updates', async () => {
   const worker = await readFile(new URL('../dist/sw.js', import.meta.url), 'utf8');
-  assert.match(worker, /tidebound-v1\.5\.0/);
+  assert.match(worker, /tidebound-v1\.5\.1/);
   assert.match(worker, /assets\/audio\/exploration-music\.mp3/);
+  assert.match(worker, /assets\/characters\/wayfarer-female\.png/);
   const appBundle = await readFile(new URL('../dist/assets/' + worker.match(/assets\/(index-[^"']+\.js)/)[1], import.meta.url), 'utf8');
   assert.match(appBundle, /sk_01_01_01/);
   assert.match(appBundle, /wa_01_001/);

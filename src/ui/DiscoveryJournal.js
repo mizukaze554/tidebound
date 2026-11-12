@@ -1,3 +1,5 @@
+import { createItemIcon } from './ItemIcon.js';
+
 export class DiscoveryJournal {
   constructor(root, storage, worldCatalog, handlers = {}) {
     this.storage = storage; this.worldCatalog = worldCatalog; this.handlers = handlers;
@@ -41,6 +43,7 @@ export class DiscoveryJournal {
       this.el.querySelector('[data-summary]').textContent = `${items.length} items found · ${resources || 'No materials gathered yet'}`;
       for (const item of items) {
         const row = this.row(item.name, `${item.type} · ${item.description}`);
+        row.prepend(createItemIcon(item));
         if (item.type !== 'utility') {
           const button = document.createElement('button'); button.textContent = Object.values(state.equipment).includes(item.id) ? 'EQUIPPED' : 'EQUIP';
           button.onclick = () => { this.handlers.equipItem?.(item.id); this.render(); };

@@ -1,6 +1,6 @@
 # TIDEBOUND assets
 
-The game uses geometric characters and synthesized sound effects when optional files are absent. Six original music loops are bundled.
+The game uses portrait-inspired geometric 3D characters and synthesized sound effects when optional files are absent. Five generated music loops and one owner-supplied exploration track are bundled.
 
 ## Models
 
@@ -16,7 +16,7 @@ TIDEBOUND v1.3 also recognizes `Sprint` and `Landing`/`Land`. Gameplay capsules 
 
 ## Audio
 
-Bundled music in `public/assets/audio/`:
+Bundled music in `public/assets/audio/`. The exploration track is the user supplied `kulakovka-action-game-620581.mp3` and plays only while exploring:
 
 - `menu-music.mp3`
 - `combat-music.mp3`

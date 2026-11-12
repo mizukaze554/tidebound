@@ -18,3 +18,15 @@ test('audio settings persist independently and draw has its own track', () => {
   assert.equal(restored.muted, true);
   assert.match(AUDIO_FILES.music.draw, /draw-music\.mp3$/);
 });
+
+test('music stops when gameplay ends and stays stopped after unlock', () => {
+  const audio = new AudioManager(new Store());
+  let pauses = 0;
+  audio.currentMusic = { pause() { pauses++; } };
+  audio.currentMusicName = 'exploration';
+  audio.stopMusic();
+  audio.unlock();
+  assert.equal(pauses, 1);
+  assert.equal(audio.currentMusic, null);
+  assert.equal(audio.currentMusicName, null);
+});

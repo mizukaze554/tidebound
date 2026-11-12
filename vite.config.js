@@ -9,10 +9,11 @@ function livingDuelPWA() {
       const precache = [...new Set([
         './', './index.html', './manifest.webmanifest',
         './assets/tidebound-icon-192.png', './assets/tidebound-icon-512.png',
+        './assets/characters/wayfarer-male.png', './assets/characters/wayfarer-female.png',
         ...['menu', 'exploration', 'combat', 'victory', 'defeat', 'draw'].map((name) => `./assets/audio/${name}-music.mp3`),
         ...generated,
       ])];
-      const source = `const VERSION = 'tidebound-v1.5.0';
+      const source = `const VERSION = 'tidebound-v1.5.1';
 const PRECACHE = ${JSON.stringify(precache)};
 self.addEventListener('install', event => event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(PRECACHE))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('tidebound-') && key !== VERSION).map(key => caches.delete(key)))).then(() => self.clients.claim())));

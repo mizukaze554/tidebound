@@ -70,13 +70,15 @@ export class HUD {
     this.refs.playerHealthText.textContent = `${Math.ceil(player.health)} / ${player.maxHealth}`;
     this.refs.playerStamina.style.width = percent(player.stamina, player.maxStamina);
     this.refs.playerEnergy.style.width = percent(player.energy, player.maxEnergy);
-    this.refs.enemyHealth.style.width = percent(enemy.health, enemy.maxHealth);
-    this.refs.enemyHealthText.textContent = `${Math.ceil(enemy.health)} / ${enemy.maxHealth}`;
+    if (enemy) {
+      this.refs.enemyHealth.style.width = percent(enemy.health, enemy.maxHealth);
+      this.refs.enemyHealthText.textContent = `${Math.ceil(enemy.health)} / ${enemy.maxHealth}`;
+    }
     const location = world ? world.coordinates(player.position) : null;
     this.refs.aiState.textContent = world
       ? `AI · ${aiState} · ${world.weather} · ${Math.abs(location.lat * 180 / Math.PI).toFixed(1)}°${location.lat >= 0 ? 'N' : 'S'}`
       : `AI · ${aiState}`;
-    this.refs.reticle.classList.toggle('active', locked && enemy.alive);
+    this.refs.reticle.classList.toggle('active', Boolean(locked && enemy?.alive));
     const min = Math.floor(timeLeft / 60), sec = Math.floor(timeLeft % 60);
     this.refs.timer.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     [...this.refs.skills.children].forEach((slot, i) => {
