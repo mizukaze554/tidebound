@@ -1,0 +1,19 @@
+{
+  "name": "TIDEBOUND — Elemental Combat",
+  "short_name": "TIDEBOUND",
+  "description": "A procedural third-person elemental combat prototype.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#07151f",
+  "theme_color": "#0b2635",
+  "icons": [
+    {
+      "src": "assets/tidebound-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

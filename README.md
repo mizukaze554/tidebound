@@ -2,6 +2,18 @@
 
 TIDEBOUND is a playable third-person 3D combat prototype built with Three.js, Anime.js, vanilla JavaScript, and Vite. Every character, weapon, arena prop, and combat effect is generated from primitive geometry at runtime.
 
+## v1.2 combat upgrade
+
+- Swept projectile-versus-body-capsule collision prevents tunneling.
+- Permanent skill IDs support safe create, edit, update, delete, equip, and unequip operations.
+- Skill ranges now match their real projectile, area, beam, and dash distances.
+- Hit-stop, camera shake, perfect blocks, clearer wind-ups, combo buffering, critical feedback, and cooldown numbers improve combat readability.
+- Optional GLB/glTF characters use `GLTFLoader`, `AnimationMixer`, and animation-state mapping while retaining geometric fallbacks.
+- Optional music and SFX use independent volume controls, mute, smooth transitions, autoplay-safe unlocking, and synthesized fallbacks.
+- Low, Medium, and High world presets control streamed terrain detail, grass density, weather particles, and shadows.
+- An emblem derived from the owner-supplied TIDEBOUND title artwork is integrated into the main menu.
+- Installable PWA support includes offline runtime caching, a branded browser/PWA icon, enforced landscape orientation, and touch movement/combat controls for mobile play.
+
 ## Seamless generated planet
 
 The combat world is a spherical, boundary-free planet with a declared surface area of **9.6 million km²**, approximately the area of China. Rendering uses a compact scale for browser-safe floating-point physics while `kmPerUnit` preserves the authored geographic scale.
@@ -40,6 +52,12 @@ Build locally before deploying:
 ```bash
 npm ci
 npm run build
+```
+
+Run focused collision, persistence, ID, and match-result tests:
+
+```bash
+npm test
 ```
 
 Optional deployment with the Netlify CLI:
@@ -94,3 +112,5 @@ The main loop clamps frame delta to 50 ms, gameplay uses delta-time movement, te
 ## License
 
 Released under the [MIT License](./LICENSE). Copyright © 2026 mizukaze554.
+
+Third-party and owner-supplied media are governed separately; see [ASSETS.md](./ASSETS.md).

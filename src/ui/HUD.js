@@ -38,12 +38,22 @@ export class HUD {
   hide() { this.el.classList.add('hidden'); }
 
   setSkills(skills) {
-    this.refs.skills.innerHTML = skills.map((skill, i) => `
-      <div class="skill-slot element-${skill.element.toLowerCase()}" data-slot="${i}">
-        <kbd>${['E', 'R', 'F'][i]}</kbd><i class="skill-glyph">${skill.element[0]}${skill.effect[0]}</i>
-        <div><b>${skill.name}</b><small>${skill.element} · ${skill.shape}</small></div>
-        <span class="cooldown"></span>
-      </div>`).join('');
+    this.refs.skills.replaceChildren();
+    skills.forEach((skill, index) => {
+      const slot = document.createElement('div');
+      slot.className = `skill-slot ${skill ? `element-${skill.element.toLowerCase()}` : 'empty'}`;
+      slot.dataset.slot = String(index);
+      const key = document.createElement('kbd'); key.textContent = ['E', 'R', 'F'][index];
+      const glyph = document.createElement('i'); glyph.className = 'skill-glyph'; glyph.textContent = skill ? `${skill.element[0]}${skill.effect[0]}` : '—';
+      const copy = document.createElement('div');
+      const name = document.createElement('b'); name.textContent = skill?.name || 'Empty slot';
+      const detail = document.createElement('small'); detail.textContent = skill ? `${skill.element} · ${skill.shape}` : 'Equip in Skill Creator';
+      copy.append(name, detail);
+      const cooldown = document.createElement('span'); cooldown.className = 'cooldown';
+      const cooldownText = document.createElement('em'); cooldownText.className = 'cooldown-text';
+      slot.append(key, glyph, copy, cooldown, cooldownText);
+      this.refs.skills.append(slot);
+    });
   }
 
   message(text, tone = '') {
@@ -72,6 +82,11 @@ export class HUD {
       const total = skills[i] ? 2.2 + skills[i].power * 0.18 + skills[i].duration * 0.2 + (skills[i].shape === 'Area' ? 0.8 : 0) : 1;
       const remaining = player.cooldowns[i];
       slot.querySelector('.cooldown').style.setProperty('--cooldown', `${remaining / total * 100}%`);
+      slot.querySelector('.cooldown-text').textContent = remaining > 0 ? remaining.toFixed(1) : '';
+      if (slot.dataset.wasCooling === 'true' && remaining <= 0) {
+        slot.classList.remove('ready'); void slot.offsetWidth; slot.classList.add('ready');
+      }
+      slot.dataset.wasCooling = String(remaining > 0);
       slot.classList.toggle('cooling', remaining > 0);
     });
     this.frames++; this.fpsTime += dt;

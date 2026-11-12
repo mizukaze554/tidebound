@@ -12,6 +12,10 @@ export class PlanetWorld {
     this.kmPerUnit = this.realRadiusKm / this.radius;
     this.chunkAngle = Math.PI * 2 / 144;
     this.chunkRadius = 3;
+    this.terrainSegments = 10;
+    this.grassCount = 34;
+    this.particleMultiplier = 0.75;
+    this.quality = 'balanced';
     this.chunks = new Map();
     this.streamTimer = 0;
     this.weatherClock = 0;
@@ -20,8 +24,10 @@ export class PlanetWorld {
     this.weather = 'CLEAR';
     this.weatherParticles = null;
     this.weatherPositions = null;
+    this.rotationAxis = new THREE.Vector3(0, 1, 0);
     this.buildAtmosphere();
     this.buildClouds();
+    this.buildDuelSanctuary();
     this.stream(this.surfacePoint(this.spawnLat, this.spawnLon));
   }
 
@@ -75,6 +81,40 @@ export class PlanetWorld {
       this.cloudLayer.add(cloud);
     }
     this.scene.add(this.cloudLayer);
+  }
+
+  buildDuelSanctuary() {
+    const center = this.surfacePoint(this.spawnLat, this.spawnLon, 0.12);
+    const up = center.clone().normalize();
+    const east = new THREE.Vector3(-Math.sin(this.spawnLon), 0, Math.cos(this.spawnLon)).normalize();
+    const north = new THREE.Vector3().crossVectors(up, east).normalize();
+    const orient = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), up);
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(8.2, 8.7, 64),
+      new THREE.MeshToonMaterial({ color: 0xd9d2b2, emissive: 0x315f69, emissiveIntensity: 0.22, side: THREE.DoubleSide }),
+    );
+    ring.position.copy(center); ring.quaternion.copy(orient); ring.receiveShadow = true;
+    this.scene.add(ring);
+
+    const pillarGeometry = new THREE.CylinderGeometry(0.38, 0.55, 3.7, 8);
+    pillarGeometry.translate(0, 1.85, 0);
+    const pillars = new THREE.InstancedMesh(pillarGeometry, new THREE.MeshToonMaterial({ color: 0x829b98 }), 8);
+    const crystalGeometry = new THREE.OctahedronGeometry(0.55, 0);
+    const crystals = new THREE.InstancedMesh(crystalGeometry, new THREE.MeshToonMaterial({ color: 0x78e7ff, emissive: 0x35bddd, emissiveIntensity: 0.8 }), 8);
+    const matrix = new THREE.Matrix4();
+    for (let i = 0; i < 8; i++) {
+      const angle = i / 8 * Math.PI * 2;
+      const tangentPoint = center.clone().addScaledVector(east, Math.cos(angle) * 10.5).addScaledVector(north, Math.sin(angle) * 10.5);
+      const normal = tangentPoint.clone().normalize();
+      const position = normal.multiplyScalar(this.surfaceRadius(tangentPoint) + 0.05);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+      matrix.compose(position, quaternion, new THREE.Vector3(1, 1, 1)); pillars.setMatrixAt(i, matrix);
+      const crystalPosition = position.clone().addScaledVector(normal, 4.5);
+      matrix.compose(crystalPosition, quaternion, new THREE.Vector3(1, 1.35, 1)); crystals.setMatrixAt(i, matrix);
+    }
+    pillars.castShadow = pillars.receiveShadow = true; crystals.castShadow = true;
+    this.scene.add(pillars, crystals);
+    this.sanctuary = { ring, pillars, crystals };
   }
 
   hash(x, y = 0) {
@@ -153,6 +193,7 @@ export class PlanetWorld {
   chunkKey(latIndex, lonIndex) { return `${latIndex}:${lonIndex}`; }
 
   stream(position) {
+    this.lastStreamPosition = position.clone();
     const { lat, lon } = this.coordinates(position);
     const centerLat = Math.floor((lat + Math.PI / 2) / this.chunkAngle);
     const centerLon = Math.floor((lon + Math.PI) / this.chunkAngle);
@@ -175,7 +216,7 @@ export class PlanetWorld {
   }
 
   generateChunk(latIndex, lonIndex, key) {
-    const segments = 10;
+    const segments = this.terrainSegments;
     const lat0 = latIndex * this.chunkAngle - Math.PI / 2;
     const lon0 = lonIndex * this.chunkAngle - Math.PI;
     const positions = [], colors = [], indices = [];
@@ -209,7 +250,7 @@ export class PlanetWorld {
   }
 
   generateGrass(group, latIndex, lonIndex, lat0, lon0) {
-    const count = 34;
+    const count = this.grassCount;
     const geometry = new THREE.ConeGeometry(0.055, 0.62, 3);
     geometry.translate(0, 0.31, 0);
     const material = new THREE.MeshToonMaterial({ color: this.hash(latIndex, lonIndex) > 0.5 ? 0x71a957 : 0x5f984e });
@@ -276,12 +317,30 @@ export class PlanetWorld {
 
   removeChunk(key, chunk) {
     this.scene.remove(chunk);
+    const geometries = new Set(); const materials = new Set();
     chunk.traverse((object) => {
       if (!object.isMesh) return;
-      object.geometry.dispose();
-      if (Array.isArray(object.material)) object.material.forEach((m) => m.dispose()); else object.material.dispose();
+      geometries.add(object.geometry);
+      (Array.isArray(object.material) ? object.material : [object.material]).filter(Boolean).forEach((material) => materials.add(material));
     });
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
     this.chunks.delete(key);
+  }
+
+  setQuality(preset = 'balanced') {
+    const config = {
+      high: { radius: 4, segments: 12, grass: 48, particles: 1 },
+      balanced: { radius: 3, segments: 10, grass: 34, particles: 0.75 },
+      low: { radius: 2, segments: 6, grass: 12, particles: 0.4 },
+    }[preset] || { radius: 3, segments: 10, grass: 34, particles: 0.75 };
+    if (this.quality === preset && this.chunks.size) return;
+    this.quality = preset;
+    this.chunkRadius = config.radius; this.terrainSegments = config.segments;
+    this.grassCount = config.grass; this.particleMultiplier = config.particles;
+    const position = this.lastStreamPosition?.clone() || this.surfacePoint(this.spawnLat, this.spawnLon);
+    for (const [key, chunk] of [...this.chunks]) this.removeChunk(key, chunk);
+    this.stream(position);
   }
 
   setWeather(type, player) {
@@ -297,7 +356,7 @@ export class PlanetWorld {
     }[type];
     this.scene.fog.density = config.fog; this.sun.intensity = config.light;
     if (!['RAIN', 'STORM', 'SNOW'].includes(type)) return;
-    const count = type === 'STORM' ? 650 : 420;
+    const count = Math.floor((type === 'STORM' ? 650 : 420) * this.particleMultiplier);
     this.weatherPositions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       this.weatherPositions[i * 3] = (this.hash(i, 1) - 0.5) * 42;
@@ -322,7 +381,7 @@ export class PlanetWorld {
     if (!player) return;
     this.weatherClock += dt;
     this.cloudLayer.rotation.y += dt * 0.004;
-    this.sun.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), dt * 0.006);
+    this.sun.position.applyAxisAngle(this.rotationAxis, dt * 0.006);
     this.streamTimer -= dt;
     if (this.streamTimer <= 0) { this.stream(player.position); this.streamTimer = 0.45; }
     const cycle = ['CLEAR', 'RAIN', 'FOG', 'STORM', 'SNOW'];

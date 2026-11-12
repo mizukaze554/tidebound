@@ -4,12 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#07151f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="screen-orientation" content="landscape" />
     <meta name="description" content="TIDEBOUND — a procedural 3D elemental combat prototype." />
+    <link rel="icon" type="image/png" href="/assets/tidebound-icon.png" />
+    <link rel="apple-touch-icon" href="/assets/tidebound-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>TIDEBOUND — Elemental Combat</title>
   </head>
   <body>
     <div id="game"></div>
     <div id="ui-root"></div>
+    <div class="orientation-guard"><img src="/assets/tidebound-icon.png" alt="TIDEBOUND"><b>ROTATE TO LANDSCAPE</b><span>TIDEBOUND is designed for wide-screen combat.</span></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

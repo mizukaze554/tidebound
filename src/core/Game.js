@@ -11,12 +11,16 @@ import { HUD } from '../ui/HUD.js';
 import { Menu } from '../ui/Menu.js';
 import { SkillEditor } from '../ui/SkillEditor.js';
 import { SkillStorage, DEFAULT_SKILLS } from '../data/SkillStorage.js';
+import { AudioManager } from './AudioManager.js';
+import { resolveMatchOutcome } from '../combat/MatchRules.js';
+import { MobileControls } from '../ui/MobileControls.js';
 
 export class Game {
   constructor(container, uiRoot) {
     this.container = container; this.uiRoot = uiRoot;
     this.state = 'menu'; this.difficulty = 'normal'; this.renderScale = 1;
     this.locked = true; this.matchTime = 180; this.resultPending = 0; this.gender = 'male';
+    this.matchOutcome = null; this.hitStop = 0; this.footstepTimer = 0;
     this.clock = new THREE.Clock();
   }
 
@@ -35,12 +39,18 @@ export class Game {
 
     this.world = new PlanetWorld(this.scene);
     this.input = new Input(this.renderer.domElement);
+    this.mobileControls = new MobileControls(this.uiRoot, this.input);
     this.followCamera = new ThirdPersonCamera(this.camera);
-    this.effects = new Effects(this.scene, this.camera, this.uiRoot);
+    this.audio = new AudioManager();
+    this.modelLoaderPromise = import('../entities/ModelLoader.js').then(({ ModelLoader }) => new ModelLoader());
+    this.effects = new Effects(this.scene, this.camera, this.uiRoot, this.audio);
     this.storage = new SkillStorage();
     this.skills = this.storage.loadEquipped(this.storage.load());
     this.hud = new HUD(this.uiRoot);
-    this.skillEditor = new SkillEditor(this.uiRoot, this.storage, () => {}, (skill, slot) => this.equipSkill(skill, slot));
+    this.skillEditor = new SkillEditor(this.uiRoot, this.storage, () => {
+      this.skills = this.storage.loadEquipped(this.storage.load());
+      this.hud.setSkills(this.skills);
+    }, (skill, slot) => this.equipSkill(skill, slot));
     // Combat services must exist before menu callbacks can start a match. This
     // also prevents stale Vite HMR instances from reaching an uninitialized
     // skill runtime during character selection.
@@ -54,9 +64,21 @@ export class Game {
       main: () => this.returnToMenu(),
       difficulty: (value) => { this.difficulty = value; this.ai?.setDifficulty(value); },
       scale: (value) => { this.renderScale = value; this.resize(); },
+      graphics: (value) => this.setGraphics(value),
+      music: (value) => this.audio.setMusicVolume(value),
+      sfx: (value) => this.audio.setSfxVolume(value),
+      mute: (value) => this.audio.setMuted(value),
+      sensitivity: (value) => { this.followCamera.sensitivity = value; },
+      fullscreen: () => this.toggleFullscreen(),
     });
     this.menu.showMain();
+    this.menu.setAudioSettings(this.audio);
     this.hud.setSkills(this.skills);
+    this.setGraphics('balanced');
+    const unlockAudio = () => { this.audio.unlock(); this.audio.playMusic(this.state === 'playing' ? 'combat' : 'menu'); };
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    this.uiRoot.addEventListener('click', (event) => { if (event.target.closest('button')) this.audio.playSfx('ui'); });
 
     window.addEventListener('resize', () => this.resize());
     window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && !e.repeat) this.togglePause(); });
@@ -72,6 +94,11 @@ export class Game {
     const spawn = this.world.spawnPositions();
     this.player = new Character(this.scene, { color: 0x267bb4, accent: 0x5ee3ff, name: 'Wayfarer', position: spawn.player, gender });
     this.enemy = new Character(this.scene, { color: 0xa83a3a, accent: 0xff765f, name: 'Crimson Echo', position: spawn.enemy, gender: 'male', enemy: true });
+    const player = this.player, enemy = this.enemy;
+    this.modelLoaderPromise.then((loader) => {
+      if (this.player === player) loader.applyToCharacter(player, `/assets/models/wayfarer-${gender}.glb`);
+      if (this.enemy === enemy) loader.applyToCharacter(enemy, '/assets/models/crimson-echo.glb');
+    });
     this.world.updateUp(this.player); this.world.updateUp(this.enemy);
     this.ai = new EnemyAI(this.enemy, this.player, this, this.difficulty);
     this.enemySkills = [DEFAULT_SKILLS[1], DEFAULT_SKILLS[0], DEFAULT_SKILLS[2]];
@@ -80,10 +107,12 @@ export class Game {
     this.followCamera.groundForward.copy(this.enemy.position).sub(this.player.position).projectOnPlane(this.player.up).normalize();
     this.followCamera.position.copy(this.player.position).addScaledVector(this.player.up, 4).addScaledVector(this.followCamera.groundForward, -9);
     this.followCamera.lookAt.copy(this.player.position).addScaledVector(this.player.up, 1.5);
-    this.matchTime = 180; this.resultPending = 0; this.locked = true;
+    this.matchTime = 180; this.resultPending = 0; this.matchOutcome = null; this.hitStop = 0; this.locked = true;
     this.state = 'playing'; this.input.enabled = true; this.input.reset();
     this.menu.hideAll(); this.menu.settings.classList.add('hidden');
     this.hud.setSkills(this.skills); this.hud.show(); this.hud.message('DUEL BEGIN', 'good');
+    this.mobileControls.show();
+    this.audio.playMusic('combat');
     this.clock.getDelta();
   }
 
@@ -91,7 +120,7 @@ export class Game {
     for (const character of [this.player, this.enemy]) {
       if (!character) continue;
       this.scene.remove(character.group);
-      character.group.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+      character.dispose();
     }
     this.player = this.enemy = null;
   }
@@ -110,21 +139,28 @@ export class Game {
     if (!enemyCaster) this.hud.message(result.ok ? skill.name.toUpperCase() : result.error, result.ok ? 'good' : 'bad');
   }
 
-  onDamage(target) {
+  onDamage(target, result = {}) {
     const flash = target === this.player ? document.body : this.hud.el;
     flash.classList.remove('hit-flash'); void flash.offsetWidth; flash.classList.add('hit-flash');
-    if (!target.alive && !this.resultPending) this.resultPending = 1.8;
+    this.hitStop = Math.max(this.hitStop, result.blocked ? 0.025 : result.critical ? 0.075 : 0.055);
+    this.followCamera.addShake(result.blocked ? 0.08 : Math.min(result.critical ? 0.34 : 0.28, 0.1 + (result.damage || 0) * 0.006));
+    if (result.blocked) this.effects.blockBurst(target);
+    if (!target.alive && !this.resultPending) {
+      this.matchOutcome = target === this.player ? 'defeat' : 'victory';
+      this.resultPending = 1.8;
+    }
   }
 
   updatePlayer(dt) {
+    if (this.input.consume('Escape')) { this.pause(); return 0; }
     let move = new THREE.Vector3();
     if (this.input.down('KeyW')) move.add(this.followCamera.forward());
     if (this.input.down('KeyS')) move.sub(this.followCamera.forward());
     if (this.input.down('KeyD')) move.add(this.followCamera.right());
     if (this.input.down('KeyA')) move.sub(this.followCamera.right());
-    if (this.input.consume('Space')) this.player.jump();
-    if (this.input.consume('KeyQ')) this.player.dodge(move);
-    if (this.input.consume('Mouse0')) this.player.startAttack();
+    if (this.input.consume('Space') && this.player.jump()) this.audio.playSfx('jump');
+    if (this.input.consume('KeyQ') && this.player.dodge(move)) this.audio.playSfx('dodge');
+    if (this.input.consume('Mouse0') && this.player.startAttack()) this.audio.playSfx('swing');
     this.player.setBlock(this.input.button(2));
     if (this.input.consume('KeyE')) this.useSkill(this.player, 0);
     if (this.input.consume('KeyR')) this.useSkill(this.player, 1);
@@ -137,13 +173,27 @@ export class Game {
 
   update(dt, time) {
     if (this.state !== 'playing' || !this.player) return;
+    if (this.hitStop > 0) {
+      this.hitStop = Math.max(0, this.hitStop - dt);
+      this.followCamera.update(dt * 0.25, this.player, this.enemy, this.input, this.locked);
+      return;
+    }
     this.world.update(time, dt, this.player);
     this.matchTime = Math.max(0, this.matchTime - dt);
+    this.player.capturePreviousPosition(); this.enemy.capturePreviousPosition();
     const playerMovement = this.updatePlayer(dt);
+    if (this.state !== 'playing') return;
     const enemyMovement = this.ai.update(dt);
+    const playerWasGrounded = this.player.grounded;
     this.player.update(dt, playerMovement);
     this.enemy.update(dt, enemyMovement);
     this.world.constrain(this.player); this.world.constrain(this.enemy);
+    if (!playerWasGrounded && this.player.grounded) this.audio.playSfx('landing');
+    this.footstepTimer -= dt;
+    if (playerMovement && this.player.grounded && this.footstepTimer <= 0) {
+      this.audio.playSfx('footsteps');
+      this.footstepTimer = playerMovement === 2 ? 0.28 : 0.42;
+    }
     this.combat.update(this.player, this.enemy);
     this.combat.update(this.enemy, this.player);
     this.skillSystem.update(dt);
@@ -153,13 +203,12 @@ export class Game {
     this.hud.update(this.player, this.enemy, this.ai.state, this.skills, dt, this.locked, this.matchTime, this.world);
 
     if (this.matchTime <= 0 && !this.resultPending) {
-      if (this.player.health === this.enemy.health) this.enemy.health = 0;
-      else (this.player.health > this.enemy.health ? this.enemy : this.player).health = 0;
+      this.matchOutcome = resolveMatchOutcome(this.player.health, this.enemy.health);
       this.resultPending = 1.2;
     }
     if (this.resultPending > 0) {
       this.resultPending -= dt;
-      if (this.resultPending <= 0) this.endMatch(this.player.alive && this.player.health > 0);
+      if (this.resultPending <= 0) this.endMatch(this.matchOutcome || (this.player.alive ? 'victory' : 'defeat'));
     }
   }
 
@@ -175,16 +224,31 @@ export class Game {
     }
   }
 
-  endMatch(victory) {
+  endMatch(outcome) {
     this.state = 'result'; this.input.enabled = false;
     document.exitPointerLock?.(); this.hud.hide();
-    this.menu.showResult(victory, this.player.stats);
+    this.mobileControls.hide();
+    this.menu.showResult(outcome, this.player.stats);
+    this.audio.playMusic(outcome === 'defeat' ? 'defeat' : 'victory');
   }
 
   togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
-  pause() { this.state = 'paused'; this.input.enabled = false; document.exitPointerLock?.(); this.menu.showPause(); }
-  resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.menu.hideAll(); this.clock.getDelta(); }
-  returnToMenu() { this.state = 'menu'; this.input.enabled = false; document.exitPointerLock?.(); this.hud.hide(); this.clearCharacters(); this.skillSystem?.clear?.(); this.effects?.clear?.(); this.menu.showMain(); }
+  pause() { this.state = 'paused'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.menu.showPause(); }
+  resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.mobileControls.show(); this.menu.hideAll(); this.clock.getDelta(); }
+  returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); document.exitPointerLock?.(); this.hud.hide(); this.clearCharacters(); this.skillSystem?.clear?.(); this.effects?.clear?.(); this.audio.playMusic('menu'); this.menu.showMain(); }
+
+  setGraphics(preset) {
+    const settings = { high: { scale: 1, shadows: true }, balanced: { scale: 0.8, shadows: true }, low: { scale: 0.65, shadows: false } }[preset] || { scale: 0.8, shadows: true };
+    this.renderScale = settings.scale;
+    this.renderer.shadowMap.enabled = settings.shadows;
+    this.world.setQuality(preset);
+    this.resize();
+  }
+
+  toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.();
+  }
 
   resize() {
     this.camera.aspect = innerWidth / innerHeight; this.camera.updateProjectionMatrix();

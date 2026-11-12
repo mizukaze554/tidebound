@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { circleOverlap, pointNearSegment } from './HitDetection.js';
+import { sweptSphereIntersectsCapsule } from './HitDetection.js';
 
 export const ELEMENTS = {
   Water: { color: 0x48c9ff, bonus: 'control' },
@@ -42,6 +42,8 @@ export class SkillSystem {
 
   static cooldown(skill) { return 2.2 + skill.power * 0.18 + skill.duration * 0.2 + (skill.shape === 'Area' ? 0.8 : 0); }
 
+  static range(skill) { return Number(skill.range); }
+
   activate(caster, target, skill, slot = 0) {
     const error = SkillSystem.validate(skill);
     if (error) return { ok: false, error };
@@ -59,6 +61,7 @@ export class SkillSystem {
     else if (skill.shape === 'Projectile') this.projectile(caster, target, skill, direction, color);
     else if (skill.shape === 'Area') this.area(caster, target, skill, color);
     else if (skill.shape === 'Beam') this.beam(caster, target, skill, direction, color);
+    this.effects.sound(skill.element.toLowerCase());
     return { ok: true, cost };
   }
 
@@ -87,12 +90,12 @@ export class SkillSystem {
     mesh.position.copy(caster.position).addScaledVector(caster.up, 1.5).addScaledVector(direction, 0.9);
     mesh.castShadow = true;
     this.scene.add(mesh);
-    this.active.push({ type: 'projectile', mesh, caster, target, skill, direction, color, distance: 0, hit: false, radius });
+    this.active.push({ type: 'projectile', mesh, previousPosition: mesh.position.clone(), caster, target, skill, direction, color, distance: 0, hit: false, radius });
   }
 
   area(caster, target, skill, color) {
     const center = caster.position.clone();
-    const maxRadius = 2 + skill.range * 0.58;
+    const maxRadius = SkillSystem.range(skill);
     const mesh = new THREE.Mesh(
       new THREE.RingGeometry(0.9, 1.12, 48),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false }),
@@ -106,7 +109,7 @@ export class SkillSystem {
   }
 
   beam(caster, target, skill, direction, color) {
-    const length = 3 + skill.range;
+    const length = SkillSystem.range(skill);
     const start = caster.position.clone().addScaledVector(caster.up, 1.45);
     const end = start.clone().addScaledVector(direction, length);
     const mesh = new THREE.Mesh(
@@ -116,7 +119,8 @@ export class SkillSystem {
     mesh.position.copy(start).addScaledVector(direction, length / 2);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
     this.scene.add(mesh);
-    const hit = target?.alive && pointNearSegment(target.position.clone().addScaledVector(target.up, 1), start, end, target.radius + 0.45);
+    const hitbox = target?.getBodyHitbox?.();
+    const hit = target?.alive && hitbox && sweptSphereIntersectsCapsule(start, end, 0.18, hitbox.start, hitbox.end, hitbox.radius);
     if (hit) this.applyEffect(caster, target, skill, direction, color);
     this.active.push({ type: 'beam', mesh, elapsed: 0, duration: 0.18 + skill.duration * 0.045 });
   }
@@ -153,15 +157,27 @@ export class SkillSystem {
       let remove = false;
       if (item.type === 'projectile') {
         const speed = 6 + item.skill.speed * 1.25 + (item.skill.element === 'Wind' ? 3 : 0);
-        item.mesh.position.addScaledVector(item.direction, speed * dt);
+        const travel = Math.min(speed * dt, SkillSystem.range(item.skill) - item.distance);
+        item.previousPosition.copy(item.mesh.position);
+        item.mesh.position.addScaledVector(item.direction, travel);
         item.mesh.rotation.x += dt * 6; item.mesh.rotation.y += dt * 9;
-        item.distance += speed * dt;
-        if (!item.hit && item.target?.alive && circleOverlap(item.mesh.position, item.radius, item.target.position, item.target.radius)) {
+        item.distance += travel;
+        const hitbox = item.target?.getBodyHitbox?.(item.target.previousPosition);
+        const targetDelta = item.target?.position.clone().sub(item.target.previousPosition);
+        const relativeEnd = targetDelta ? item.mesh.position.clone().sub(targetDelta) : item.mesh.position;
+        if (!item.hit && item.target?.alive && hitbox && sweptSphereIntersectsCapsule(
+          item.previousPosition,
+          relativeEnd,
+          item.radius,
+          hitbox.start,
+          hitbox.end,
+          hitbox.radius,
+        )) {
           item.hit = true;
           this.applyEffect(item.caster, item.target, item.skill, item.direction, item.color);
           remove = true;
         }
-        if (item.distance >= 3 + item.skill.range * 1.5) remove = true;
+        if (item.distance >= SkillSystem.range(item.skill)) remove = true;
       } else if (item.type === 'area') {
         item.elapsed += dt;
         const progress = Math.min(1, item.elapsed / item.duration);

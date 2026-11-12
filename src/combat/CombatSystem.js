@@ -19,10 +19,11 @@ export class CombatSystem {
       return;
     }
     const result = target.takeDamage(attacker.attackPower + attack.step * 3, attacker, 2.2 + attack.step * 0.8);
+    result.critical = attack.step === 3 && !result.blocked;
     this.effects.slash(attacker, attack.step, true);
     if (result.hit) {
       this.effects.impact(target.position, attacker.enemy ? 0xff6b5d : 0x69d8ff, result.blocked);
-      this.effects.damageNumber(target.position, result.damage, result.blocked);
+      this.effects.damageNumber(target.position, result.damage, result.blocked, false, result.critical);
       this.onDamage?.(target, result);
     }
   }

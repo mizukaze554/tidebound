@@ -4,6 +4,9 @@ export class Input {
     this.keys = new Set();
     this.pressed = new Set();
     this.buttons = new Set();
+    this.virtualKeys = new Set();
+    this.virtualButtons = new Set();
+    this.virtualPressed = new Set();
     this.mouseDelta = { x: 0, y: 0 };
     this.enabled = false;
 
@@ -37,15 +40,21 @@ export class Input {
     return ['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target?.tagName);
   }
 
-  down(code) { return this.keys.has(code); }
-  button(button) { return this.buttons.has(button); }
+  down(code) { return this.keys.has(code) || this.virtualKeys.has(code); }
+  button(button) { return this.buttons.has(button) || this.virtualButtons.has(button); }
   consume(code) {
-    const value = this.pressed.has(code);
+    const value = this.pressed.has(code) || this.virtualPressed.has(code);
     this.pressed.delete(code);
+    this.virtualPressed.delete(code);
     return value;
   }
+  setVirtual(code, active) { active ? this.virtualKeys.add(code) : this.virtualKeys.delete(code); }
+  setVirtualButton(button, active) { active ? this.virtualButtons.add(button) : this.virtualButtons.delete(button); }
+  pulse(code) { this.virtualPressed.add(code); }
+  addLookDelta(x, y) { this.mouseDelta.x += x; this.mouseDelta.y += y; }
   endFrame() {
     this.pressed.clear();
+    this.virtualPressed.clear();
     this.mouseDelta.x = 0;
     this.mouseDelta.y = 0;
   }
@@ -58,5 +67,13 @@ export class Input {
     else this.pressed.clear();
     if (!(this.buttons instanceof Set)) this.buttons = new Set();
     else this.buttons.clear();
+    if (!(this.virtualKeys instanceof Set)) this.virtualKeys = new Set();
+    else this.virtualKeys.clear();
+    if (!(this.virtualButtons instanceof Set)) this.virtualButtons = new Set();
+    else this.virtualButtons.clear();
+    if (!(this.virtualPressed instanceof Set)) this.virtualPressed = new Set();
+    else this.virtualPressed.clear();
+    this.mouseDelta.x = 0;
+    this.mouseDelta.y = 0;
   }
 }

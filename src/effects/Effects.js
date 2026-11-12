@@ -2,15 +2,16 @@ import * as THREE from 'three';
 import { animate } from 'animejs';
 
 export class Effects {
-  constructor(scene, camera, uiRoot) {
+  constructor(scene, camera, uiRoot, audioManager = null) {
     this.scene = scene;
     this.camera = camera;
     this.uiRoot = uiRoot;
     this.items = [];
-    this.audio = null;
+    this.audioManager = audioManager;
   }
 
   sound(type = 'hit') {
+    if (this.audioManager) { this.audioManager.playSfx(type); return; }
     try {
       this.audio ||= new AudioContext();
       if (this.audio.state === 'suspended') this.audio.resume();
@@ -32,6 +33,20 @@ export class Effects {
     return mesh;
   }
 
+  disposeItem(item) {
+    this.scene.remove(item.mesh);
+    const geometries = new Set();
+    const materials = new Set();
+    item.mesh.traverse((child) => {
+      if (!child.isMesh || child.userData.sharedResource) return;
+      if (child.geometry) geometries.add(child.geometry);
+      const list = Array.isArray(child.material) ? child.material : [child.material];
+      list.filter(Boolean).forEach((material) => { if (!material.userData?.sharedResource) materials.add(material); });
+    });
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
+  }
+
   slash(character, step, hit) {
     const color = character.enemy ? 0xff715e : 0x69e4ff;
     const mesh = new THREE.Mesh(
@@ -49,9 +64,9 @@ export class Effects {
     const group = new THREE.Group();
     const up = position.clone().normalize();
     group.position.copy(position).addScaledVector(up, 1.4);
-    const mat = new THREE.MeshBasicMaterial({ color: blocked ? 0xffffff : color, transparent: true, opacity: 1 });
+    const sparkGeometry = new THREE.BoxGeometry(0.055, 0.055, 0.45);
     for (let i = 0; i < 10; i++) {
-      const spark = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.055, 0.45), mat.clone());
+      const spark = new THREE.Mesh(sparkGeometry, new THREE.MeshBasicMaterial({ color: blocked ? 0x9feaff : color, transparent: true, opacity: 1 }));
       spark.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       spark.userData.velocity = new THREE.Vector3().randomDirection().multiplyScalar(2.4 + Math.random() * 2.5);
       group.add(spark);
@@ -60,6 +75,19 @@ export class Effects {
       item.mesh.children.forEach((spark) => { spark.position.addScaledVector(spark.userData.velocity, dt); spark.material.opacity = item.life / item.maxLife; });
     });
     this.sound(blocked ? 'block' : 'hit');
+  }
+
+  blockBurst(character) {
+    const mesh = new THREE.Mesh(
+      new THREE.RingGeometry(0.7, 0.92, 32),
+      new THREE.MeshBasicMaterial({ color: 0xbcefff, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }),
+    );
+    mesh.position.copy(character.position).addScaledVector(character.up, 1.45).addScaledVector(character.facing, 0.7);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), character.facing);
+    this.add(mesh, 0.28, (item, dt) => {
+      item.mesh.scale.multiplyScalar(1 + dt * 8);
+      item.mesh.material.opacity = item.life / item.maxLife;
+    });
   }
 
   barrier(character, color, duration) {
@@ -73,7 +101,6 @@ export class Effects {
       item.mesh.rotation.y += dt * 1.8;
       item.mesh.material.opacity = Math.min(0.22, item.life * 0.25);
     });
-    this.sound('skill');
   }
 
   heal(character, color) {
@@ -84,7 +111,6 @@ export class Effects {
     mesh.position.copy(character.position).addScaledVector(character.up, 0.3);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), character.up);
     this.add(mesh, 0.8, (item, dt) => { item.mesh.position.addScaledVector(character.up, dt * 2.2); item.mesh.scale.multiplyScalar(1 + dt); item.mesh.material.opacity = item.life / item.maxLife; });
-    this.sound('skill');
   }
 
   windTrail(position, direction, color) {
@@ -95,13 +121,12 @@ export class Effects {
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
       this.add(mesh, 0.3 + i * 0.06, (item) => { item.mesh.material.opacity = item.life / item.maxLife; });
     }
-    this.sound('skill');
   }
 
-  damageNumber(position, value, blocked = false, healing = false) {
+  damageNumber(position, value, blocked = false, healing = false, critical = false) {
     const el = document.createElement('div');
-    el.className = `damage-number ${healing ? 'healing' : blocked ? 'blocked' : ''}`;
-    el.textContent = healing ? `+${Math.round(value)}` : blocked ? `${Math.round(value)} GUARD` : `-${Math.round(value)}`;
+    el.className = `damage-number ${healing ? 'healing' : blocked ? 'blocked' : critical ? 'critical' : ''}`;
+    el.textContent = healing ? `+${Math.round(value)}` : blocked ? `${Math.round(value)}${blocked && value === 0 ? ' PERFECT' : ' GUARD'}` : critical ? `-${Math.round(value)} CRITICAL` : `-${Math.round(value)}`;
     this.uiRoot.append(el);
     const p = position.clone().addScaledVector(position.clone().normalize(), 2.65).project(this.camera);
     el.style.left = `${(p.x * 0.5 + 0.5) * innerWidth}px`;
@@ -115,15 +140,14 @@ export class Effects {
       item.life -= dt;
       item.update?.(item, dt);
       if (item.life <= 0) {
-        this.scene.remove(item.mesh);
-        item.mesh.traverse((child) => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
+        this.disposeItem(item);
         this.items.splice(i, 1);
       }
     }
   }
 
   clear() {
-    for (const item of this.items) this.scene.remove(item.mesh);
+    for (const item of this.items) this.disposeItem(item);
     this.items.length = 0;
   }
 }

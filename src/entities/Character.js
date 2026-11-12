@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AnimationStateController } from './AnimationController.js';
 
 export class Character {
   constructor(scene, { color, accent, name, position, gender = 'male', enemy = false }) {
@@ -9,6 +10,7 @@ export class Character {
     this.group.position.copy(position);
     scene.add(this.group);
     this.position = this.group.position;
+    this.previousPosition = this.position.clone();
     this.velocity = new THREE.Vector3();
     this.up = position.clone().normalize();
     if (this.up.lengthSq() < 0.5) this.up.set(0, 1, 0);
@@ -27,6 +29,7 @@ export class Character {
     this.alive = true;
     this.grounded = true;
     this.blocking = false;
+    this.perfectBlockTimer = 0;
     this.invulnerable = 0;
     this.hitStun = 0;
     this.actionTimer = 0;
@@ -42,6 +45,9 @@ export class Character {
     this.animTime = Math.random() * 10;
     this.gender = gender;
     this.buildModel(color, accent);
+    this.fallbackObjects = [...this.group.children];
+    this.modelController = null;
+    this.externalModel = null;
   }
 
   buildModel(color, accent) {
@@ -138,7 +144,8 @@ export class Character {
   startAttack() {
     if (!this.alive || this.hitStun > 0 || this.dodgeTimer > 0 || this.blocking) return false;
     if (this.actionTimer > 0) {
-      if (this.attack && this.comboWindow > 0) this.comboQueued = true;
+      const progress = this.attack ? 1 - this.actionTimer / this.attack.duration : 0;
+      if (this.attack && progress >= 0.34) this.comboQueued = true;
       return false;
     }
     if (this.stamina < 10) return false;
@@ -146,13 +153,15 @@ export class Character {
     const durations = [0, 0.48, 0.54, 0.68];
     this.stamina -= 8 + this.comboStep * 2;
     this.actionTimer = durations[this.comboStep];
-    this.attack = { step: this.comboStep, duration: durations[this.comboStep], hit: false };
+    this.attack = { step: this.comboStep, duration: durations[this.comboStep], hit: false, windup: [0, 0.34, 0.3, 0.42][this.comboStep] };
     this.comboQueued = false;
     return true;
   }
 
   setBlock(value) {
-    this.blocking = value && this.alive && this.hitStun <= 0 && this.stamina > 0 && this.dodgeTimer <= 0;
+    const next = value && this.alive && this.hitStun <= 0 && this.stamina > 0 && this.dodgeTimer <= 0;
+    if (next && !this.blocking) this.perfectBlockTimer = 0.16;
+    this.blocking = next;
   }
 
   takeDamage(amount, source, knockback = 2, element = null) {
@@ -160,10 +169,12 @@ export class Character {
     const toSource = source.position.clone().sub(this.position).projectOnPlane(this.up).normalize();
     const facingSource = this.facing.dot(toSource) > 0.12;
     const blocked = this.blocking && facingSource && this.stamina > 0;
+    const perfect = blocked && this.perfectBlockTimer > 0;
     let damage = Math.max(1, amount - this.defense);
     if (blocked) {
-      damage *= 0.24;
-      this.stamina = Math.max(0, this.stamina - amount * 1.2);
+      damage *= perfect ? 0 : 0.24;
+      this.stamina = Math.max(0, this.stamina - amount * (perfect ? 0.3 : 1.2));
+      if (perfect) source.hitStun = Math.max(source.hitStun, 0.32);
       if (this.stamina <= 0) this.blocking = false;
     }
     if (this.shield > 0) {
@@ -184,7 +195,7 @@ export class Character {
       this.actionTimer = 0;
       this.blocking = false;
     }
-    return { hit: true, damage, blocked, element };
+    return { hit: true, damage, blocked, perfect, element };
   }
 
   heal(amount) {
@@ -193,14 +204,56 @@ export class Character {
     return actual;
   }
 
+  capturePreviousPosition() { this.previousPosition.copy(this.position); }
+
+  getBodyHitbox(atPosition = this.position) {
+    return {
+      start: atPosition.clone().addScaledVector(this.up, 0.55),
+      end: atPosition.clone().addScaledVector(this.up, 2.5),
+      radius: this.radius,
+    };
+  }
+
+  setExternalModel(model, clips = []) {
+    this.fallbackObjects.forEach((object) => { object.visible = false; });
+    this.externalModel = model;
+    this.group.add(model);
+    this.modelController = new AnimationStateController(model, clips);
+  }
+
+  animationState(movement) {
+    if (!this.alive) return 'defeat';
+    if (this.hitStun > 0) return 'hit';
+    if (this.dodgeTimer > 0) return 'dodge';
+    if (this.blocking) return 'block';
+    if (this.attack) return `attack${this.attack.step}`;
+    if (!this.grounded) return 'jump';
+    if (movement === 2) return 'run';
+    if (movement === 1) return 'walk';
+    return 'idle';
+  }
+
+  dispose() {
+    this.modelController?.dispose();
+    const geometries = new Set(); const materials = new Set();
+    this.group.traverse((object) => {
+      if (!object.isMesh || object.userData.sharedResource) return;
+      geometries.add(object.geometry);
+      (Array.isArray(object.material) ? object.material : [object.material]).filter(Boolean).forEach((material) => materials.add(material));
+    });
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
+  }
+
   update(dt, movementState = 0) {
     this.animTime += dt;
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.hitStun = Math.max(0, this.hitStun - dt);
+    this.perfectBlockTimer = Math.max(0, this.perfectBlockTimer - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.shieldTimer = Math.max(0, this.shieldTimer - dt);
     if (this.shieldTimer <= 0) this.shield = 0;
-    this.cooldowns = this.cooldowns.map((v) => Math.max(0, v - dt));
+    for (let i = 0; i < this.cooldowns.length; i++) this.cooldowns[i] = Math.max(0, this.cooldowns[i] - dt);
     if (!this.blocking && this.dodgeTimer <= 0 && this.alive) this.stamina = Math.min(this.maxStamina, this.stamina + 20 * dt);
     if (this.alive) this.energy = Math.min(this.maxEnergy, this.energy + 5.5 * dt);
 
@@ -227,6 +280,7 @@ export class Character {
       }
     }
     this.animate(movementState);
+    this.modelController?.update(dt, this.animationState(movementState));
   }
 
   animate(movement) {
@@ -240,10 +294,14 @@ export class Character {
     if (this.blocking) { leftTarget = -1.05; rightTarget = -1.15; }
     if (this.attack) {
       const p = 1 - this.actionTimer / this.attack.duration;
-      const slash = Math.sin(p * Math.PI);
-      rightTarget = -1.4 + slash * 2.65;
-      this.torso.rotation.y = Math.sin(p * Math.PI * 2) * 0.3 * (this.attack.step === 2 ? -1 : 1);
-    } else this.torso.rotation.y *= 0.78;
+      const windup = this.attack.windup;
+      const strikeProgress = THREE.MathUtils.clamp((p - windup) / (1 - windup), 0, 1);
+      const slash = p < windup ? -p / windup : Math.sin(strikeProgress * Math.PI);
+      const direction = this.attack.step === 2 ? -1 : 1;
+      rightTarget = this.attack.step === 3 ? -1.75 + slash * 3.1 : -1.35 + slash * 2.7 * direction;
+      this.leftArm.rotation.z = this.attack.step === 3 ? -0.45 * Math.sin(p * Math.PI) : 0;
+      this.torso.rotation.y = (p < windup ? -p / windup : Math.sin(strikeProgress * Math.PI * 2)) * 0.38 * direction;
+    } else { this.torso.rotation.y *= 0.78; this.leftArm.rotation.z *= 0.7; }
     this.leftArm.rotation.x += (leftTarget - this.leftArm.rotation.x) * 0.25;
     this.rightArm.rotation.x += (rightTarget - this.rightArm.rotation.x) * 0.3;
     if (this.hitStun > 0) this.torso.rotation.z = Math.sin(this.animTime * 35) * 0.12;
