@@ -38,6 +38,10 @@ test('one-time starter roll is classless, weighted, unique and unaffected by app
   assert.equal(again.newRewards, null);
   assert.deepEqual(again.state.skillIds, first.state.skillIds);
   assert.equal(again.state.character.appearance, 'female');
+  assert.equal(storage.setAppearance(again.state, 'male'), true);
+  assert.equal(storage.load().character.appearance, 'male');
+  assert.deepEqual(storage.load().skillIds, first.state.skillIds);
+  assert.equal(storage.setAppearance(again.state, 'invalid'), false);
   const another = new DiscoveryStorage(skills, items, memory(), () => 0.1).createCharacter('male');
   assert.deepEqual(another.state.skillIds, first.state.skillIds);
 });

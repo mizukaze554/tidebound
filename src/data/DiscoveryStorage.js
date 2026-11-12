@@ -65,6 +65,13 @@ export class DiscoveryStorage {
   equippedSkills(state) { return state.equippedSkills.map((id) => this.skillById.get(id) || null); }
   equippedWeapon(state) { return this.itemById.get(state.equipment.weapon) || null; }
 
+  setAppearance(state, appearance) {
+    if (!['male', 'female'].includes(appearance)) return false;
+    state.character.appearance = appearance;
+    this.save(state);
+    return true;
+  }
+
   equipSkill(state, id, slot) {
     if (!Number.isInteger(slot) || slot < 0 || slot > 2 || (id !== null && !state.skillIds.includes(id))) return false;
     state.equippedSkills = state.equippedSkills.map((value) => value === id ? null : value);

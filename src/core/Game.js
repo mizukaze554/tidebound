@@ -79,6 +79,8 @@ export class Game {
     this.combat = new CombatSystem(this.effects, (target, result) => this.onDamage(target, result));
     this.menu = new Menu(this.uiRoot, {
       start: (gender, mode) => this.start(gender, mode),
+      changeAppearance: (gender) => this.changeAppearance(gender),
+      resetGame: () => this.resetGame(),
       hasCharacter: () => Boolean(this.discoveryState),
       characterAppearance: () => this.discoveryState.character.appearance,
       skills: () => this.journal.open(this.discoveryState),
@@ -283,7 +285,10 @@ export class Game {
     if (this.input.down('KeyA')) move.sub(this.followCamera.right());
     if (this.input.consume('Space') && this.player.jump()) this.audio.playSfx('jump');
     if (this.input.consume('KeyQ') && this.player.dodge(move)) { this.audio.playSfx('dodge'); this.effects.windTrail(this.player.position, move.lengthSq() ? move.clone().normalize() : this.player.facing.clone().negate(), 0xa5ffd8); if (this.mode === 'explore') { const p = this.discoveryState.progress; p.dodges = (p.dodges || 0) + 1; if (p.dodges % 5 === 0) this.tryDiscovery('skill', 'step'); } }
-    if ((this.input.consume('Mouse0') || this.input.consume('KeyC')) && this.player.startAttack()) this.audio.playSfx('swing');
+    if (this.input.consume('Mouse0') || this.input.consume('KeyC')) {
+      this.player.face(this.followCamera.forward());
+      if (this.player.startAttack()) this.audio.playSfx('swing');
+    }
     if (this.input.consume('KeyX') && this.player.startHeavyAttack()) { this.audio.playSfx('swing'); this.hud.message('HEAVY CURRENT', 'good'); }
     this.player.setBlock(this.input.button(2) || this.input.down('KeyV'));
     if (this.input.consume('KeyE')) this.useSkill(this.player, 0);
@@ -487,6 +492,24 @@ export class Game {
   togglePause() { if (this.state === 'playing') this.pause(); else if (this.state === 'paused') this.resume(); }
   pause() { this.state = 'paused'; this.input.enabled = false; this.mobileControls.hide(); this.audio.stopMusic(); document.exitPointerLock?.(); this.menu.showPause(); }
   resume() { this.state = 'playing'; this.input.enabled = true; this.input.reset(); this.mobileControls.show(); this.menu.hideAll(); this.audio.playMusic(this.mode === 'explore' ? 'exploration' : 'combat'); this.clock.getDelta(); }
+  changeAppearance(gender) {
+    if (!this.discoveryState || !this.discoveryStorage.setAppearance(this.discoveryState, gender)) return;
+    this.start(gender, 'explore');
+  }
+
+  resetGame() {
+    this.returnToMenu();
+    localStorage.clear();
+    this.discoveryState = null;
+    this.discoverySaveError = null;
+    this.discoverySaveTimer = 0;
+    this.skills = [null, null, null];
+    this.worldSlice.setState(null);
+    this.hud.setSkills(this.skills);
+    this.menu.setHasCharacter(false);
+    this.menu.showCharacter('explore');
+  }
+
   returnToMenu() { this.state = 'menu'; this.input.enabled = false; this.mobileControls.hide(); this.audio.stopMusic(); document.exitPointerLock?.(); this.hud.hide(); this.exploreHud.classList.add('hidden'); this.uiRoot.classList.remove('exploring'); this.world.setCreaturesVisible(false); this.cancelBuild(); this.journal.close(); if (this.discoveryState) this.discoveryStorage.save(this.discoveryState); this.clearCharacters(); this.skillSystem?.clear?.(); this.catalogCombat.clear(); this.effects?.clear?.(); this.menu.help.classList.add('hidden'); this.menu.showMain(); }
 
   setGraphics(preset) {

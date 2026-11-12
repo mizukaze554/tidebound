@@ -4,12 +4,14 @@ export class Menu {
   constructor(root, handlers) {
     this.root = root; this.handlers = handlers;
     this.main = this.make('main-menu', `
-      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon-192.png" alt=""><small>WORLD DISCOVERIES</small></div><h1>TIDE<span>BOUND</span></h1><p>Explore, discover, build, and meet wildling packs.</p><div class="menu-actions"><button class="primary-button" data-explore>ENTER WORLD <i>→</i></button><button class="ghost-button" data-skills>DISCOVERY JOURNAL</button><button class="ghost-button hidden" data-install>INSTALL TIDEBOUND</button><button class="text-button" data-help>HOW TO PLAY</button><button class="text-button" data-settings>SETTINGS</button></div></div><div class="menu-footer"><span>v1.5.1 · WORLD DISCOVERIES</span><span>OFFLINE READY · DISCOVERIES</span></div>`);
+      <div class="menu-vignette"></div><div class="brand-block"><div class="brand-kicker"><img class="brand-icon" src="/assets/tidebound-icon-192.png" alt=""><small>WORLD DISCOVERIES</small></div><h1>TIDE<span>BOUND</span></h1><p>Explore, discover, build, and meet wildling packs.</p><div class="menu-actions"><button class="primary-button" data-explore>ENTER WORLD <i>→</i></button><button class="ghost-button hidden" data-appearance>CHANGE APPEARANCE</button><button class="ghost-button" data-skills>DISCOVERY JOURNAL</button><button class="ghost-button hidden" data-install>INSTALL TIDEBOUND</button><button class="text-button" data-help>HOW TO PLAY</button><button class="text-button" data-settings>SETTINGS</button><button class="text-button hidden" data-reset>NEW GAME · ERASE SAVE</button></div></div><div class="menu-footer"><span>v1.5.2 · WORLD DISCOVERIES</span><span>OFFLINE READY · DISCOVERIES</span></div>`);
     this.main.querySelector('[data-explore]').onclick = () => {
       if (handlers.hasCharacter?.()) handlers.start(handlers.characterAppearance(), 'explore');
       else this.showCharacter('explore');
     };
-    if (handlers.hasCharacter?.()) this.main.querySelector('[data-explore]').innerHTML = 'CONTINUE WORLD <i>→</i>';
+    this.setHasCharacter(Boolean(handlers.hasCharacter?.()));
+    this.main.querySelector('[data-appearance]').onclick = () => this.showCharacter('explore');
+    this.main.querySelector('[data-reset]').onclick = handlers.resetGame;
     this.main.querySelector('[data-help]').onclick = () => this.showHelp();
     this.main.querySelector('[data-skills]').onclick = handlers.skills;
     this.main.querySelector('[data-settings]').onclick = () => this.showSettings();
@@ -27,7 +29,7 @@ export class Menu {
           card.classList.toggle('selected', selected);
           card.setAttribute('aria-pressed', String(selected));
         });
-        this.character.querySelector('[data-confirm]').innerHTML = `${this.selectedMode === 'explore' ? 'EXPLORE' : 'ENTER WORLD'} AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
+        this.updateCharacterSelection();
       });
     });
     this.character.querySelector('[data-confirm]').addEventListener('click', (event) => {
@@ -36,7 +38,8 @@ export class Menu {
       if (button.disabled) return;
       button.disabled = true;
       try {
-        handlers.start(this.selectedGender, this.selectedMode);
+        if (handlers.hasCharacter?.()) handlers.changeAppearance(this.selectedGender);
+        else handlers.start(this.selectedGender, this.selectedMode);
       } catch (error) {
         button.disabled = false;
         console.error('Unable to start TIDEBOUND match:', error);
@@ -45,9 +48,11 @@ export class Menu {
     });
     this.character.querySelector('[data-back]').onclick = () => this.showMain();
 
-    this.pause = this.make('pause-menu hidden', `<div class="pause-panel panel-cut"><small>GAME PAUSED</small><h2>PAUSED</h2><button class="primary-button" data-resume>RESUME CURRENT</button><button class="ghost-button" data-help>HOW TO PLAY</button><button class="ghost-button" data-skills>DISCOVERY JOURNAL</button><button class="ghost-button" data-restart>RETURN TO SANCTUARY</button><button class="ghost-button" data-settings>SETTINGS</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
+    this.pause = this.make('pause-menu hidden', `<div class="pause-panel panel-cut"><small>GAME PAUSED</small><h2>PAUSED</h2><button class="primary-button" data-resume>RESUME CURRENT</button><button class="ghost-button" data-help>HOW TO PLAY</button><button class="ghost-button" data-skills>DISCOVERY JOURNAL</button><button class="ghost-button" data-restart>RETURN TO SANCTUARY</button><button class="ghost-button" data-appearance>CHANGE APPEARANCE</button><button class="ghost-button" data-settings>SETTINGS</button><button class="text-button" data-reset>NEW GAME · ERASE SAVE</button><button class="text-button" data-main>RETURN TO TITLE</button></div>`);
     this.pause.querySelector('[data-resume]').onclick = handlers.resume;
     this.pause.querySelector('[data-restart]').onclick = handlers.restart;
+    this.pause.querySelector('[data-appearance]').onclick = () => this.showCharacter('explore');
+    this.pause.querySelector('[data-reset]').onclick = handlers.resetGame;
     this.pause.querySelector('[data-main]').onclick = handlers.main;
     this.pause.querySelector('[data-skills]').onclick = handlers.skills;
     this.pause.querySelector('[data-help]').onclick = () => this.showHelp();
@@ -77,11 +82,26 @@ export class Menu {
   allScreens() { return [this.main, this.character, this.pause, this.result]; }
   show(el) { this.allScreens().forEach((s) => s.classList.add('hidden')); el.classList.remove('hidden'); animate(el.children, { opacity: [0, 1], delay: (_, i) => i * 70, duration: 500, ease: 'outExpo' }); }
   showMain() { this.show(this.main); }
-  setHasCharacter() { this.main.querySelector('[data-explore]').innerHTML = 'CONTINUE WORLD <i>→</i>'; }
+  setHasCharacter(value = true) {
+    this.main.querySelector('[data-explore]').innerHTML = value ? 'CONTINUE WORLD <i>→</i>' : 'ENTER WORLD <i>→</i>';
+    this.main.querySelector('[data-appearance]').classList.toggle('hidden', !value);
+    this.main.querySelector('[data-reset]').classList.toggle('hidden', !value);
+  }
+  updateCharacterSelection() {
+    const existing = Boolean(this.handlers.hasCharacter?.());
+    this.character.querySelector('[data-confirm]').innerHTML = `${existing ? 'SAVE APPEARANCE' : 'EXPLORE'} AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
+    this.character.querySelectorAll('[data-gender]').forEach((card) => {
+      const selected = card.dataset.gender === this.selectedGender;
+      card.classList.toggle('selected', selected);
+      card.setAttribute('aria-pressed', String(selected));
+    });
+  }
   showCharacter(mode = 'duel') {
     this.selectedMode = mode;
-    this.character.querySelector('.screen-heading small').textContent = 'CHOOSE YOUR APPEARANCE';
-    this.character.querySelector('[data-confirm]').innerHTML = `${mode === 'explore' ? 'EXPLORE' : 'ENTER WORLD'} AS ${this.selectedGender.toUpperCase()} <i>→</i>`;
+    const existing = Boolean(this.handlers.hasCharacter?.());
+    this.selectedGender = existing ? this.handlers.characterAppearance() : 'male';
+    this.character.querySelector('.screen-heading small').textContent = existing ? 'CHANGE YOUR APPEARANCE' : 'CHOOSE YOUR APPEARANCE';
+    this.updateCharacterSelection();
     this.character.querySelector('[data-confirm]').disabled = false;
     this.character.querySelector('[data-start-error]')?.remove();
     this.show(this.character);

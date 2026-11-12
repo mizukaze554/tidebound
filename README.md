@@ -5,7 +5,7 @@ TIDEBOUND is an offline, single-player Three.js world. Choose an appearance, exp
 ## Play
 
 1. Select **Enter World**, then choose an appearance. The first character receives one or two random starter skills and exactly one basic weapon. These rewards are stored once and never rerolled on refresh.
-2. Open the **Discovery Journal** to see only skills, items, and blueprints you have earned. Equip discovered skills to E, R, or F. Equip a weapon or armor from Inventory.
+2. Open the **Discovery Journal** to see only skills, items, and blueprints you have earned. Equip discovered skills to E, R, or F. Equip a weapon or armor from Inventory. Use **Change Appearance** on the title or pause screen to switch between the two characters without rerolling rewards. **New Game · Erase Save** clears this site's local storage and returns to character selection.
 3. Explore the grassland around the sanctuary. Gather grass, trees, and stones for fiber, wood, and stone. The first gathers reveal foundation, wall, and hut blueprints. Coastal sand and mountain iron unlock road and watchtower blueprints. Open Blueprints, preview a structure, rotate it, and place it on clear, sufficiently flat ground when you have its materials.
 4. Wildlings roam in groups. They attack if they see you within range or you approach closely. Normal attacks, blocks, dodges, and catalog skills work in these encounters. Defeat and exploration can reveal more discoveries.
 
@@ -20,7 +20,7 @@ TIDEBOUND is an offline, single-player Three.js world. Choose an appearance, exp
 | G / Gather button | Gather a nearby resource |
 | J / Journal button | Open the Discovery Journal |
 | B | Open discovered blueprints |
-| Left click or C / attack button | Attack |
+| Left click or C / attack button | Attack while moving or sprinting |
 | X | Heavy attack |
 | Right click or hold V / block button | Block |
 | Q / dodge button | Dodge |

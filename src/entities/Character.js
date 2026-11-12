@@ -112,7 +112,7 @@ export class Character {
   }
 
   move(direction, dt, sprint = false) {
-    if (!this.alive || this.hitStun > 0 || this.actionTimer > 0 || this.dodgeTimer > 0) return false;
+    if (!this.alive || this.hitStun > 0 || this.dodgeTimer > 0) return false;
     direction.projectOnPlane(this.up);
     const moving = direction.lengthSq() > 0.01;
     if (!moving) return false;
@@ -121,7 +121,7 @@ export class Character {
     const buffSpeed = this.buffs.reduce((value, entry) => value * modifier('buff', entry.id, entry.magnitude).speed, 1);
     const speed = this.speed * statusSpeed * buffSpeed * (running ? 1.62 : 1);
     this.position.addScaledVector(direction.normalize(), speed * dt);
-    this.face(direction, dt);
+    if (!this.attack) this.face(direction, dt);
     if (running) this.stamina = Math.max(0, this.stamina - 18 * dt);
     return running ? 2 : 1;
   }

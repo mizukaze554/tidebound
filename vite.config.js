@@ -13,7 +13,7 @@ function livingDuelPWA() {
         ...['menu', 'exploration', 'combat', 'victory', 'defeat', 'draw'].map((name) => `./assets/audio/${name}-music.mp3`),
         ...generated,
       ])];
-      const source = `const VERSION = 'tidebound-v1.5.1';
+      const source = `const VERSION = 'tidebound-v1.5.2';
 const PRECACHE = ${JSON.stringify(precache)};
 self.addEventListener('install', event => event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(PRECACHE))));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('tidebound-') && key !== VERSION).map(key => caches.delete(key)))).then(() => self.clients.claim())));
